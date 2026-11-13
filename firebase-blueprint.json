@@ -1,0 +1,189 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Registered customer, seller, or admin account in AP Local Mart",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "email": { "type": "string", "maxLength": 160 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "role": { "type": "string", "enum": ["customer", "seller", "admin"] },
+        "isVerified": { "type": "boolean" },
+        "sellerId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "name", "email", "phone", "role", "isVerified", "createdAt"]
+    },
+    "Seller": {
+      "title": "Seller",
+      "description": "Local Andhra Pradesh store, farmer, or artisan seller profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "maxLength": 128 },
+        "storeName": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "storeSlug": { "type": "string", "maxLength": 160 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "rating": { "type": "number" },
+        "isKycVerified": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["active", "pending", "suspended"] },
+        "pickupPincode": { "type": "string", "maxLength": 12 },
+        "pickupDistrict": { "type": "string", "maxLength": 100 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "storeName", "status", "createdAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Marketplace product listing from an Andhra Pradesh seller",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "sellerId": { "type": "string", "maxLength": 128 },
+        "sellerName": { "type": "string", "maxLength": 160 },
+        "categoryId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "titleTe": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "brand": { "type": "string", "maxLength": 120 },
+        "originalPrice": { "type": "number" },
+        "sellingPrice": { "type": "number" },
+        "discountPercent": { "type": "number" },
+        "stock": { "type": "number" },
+        "inStock": { "type": "boolean" },
+        "rating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "isAndhraSpecial": { "type": "boolean" },
+        "originDistrict": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["active", "draft", "archived"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "sellerId", "categoryId", "title", "sellingPrice", "stock", "status", "createdAt"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Product category in AP Local Mart",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "nameTe": { "type": "string", "maxLength": 120 },
+        "slug": { "type": "string", "maxLength": 120 },
+        "image": { "type": "string", "maxLength": 500 },
+        "description": { "type": "string", "maxLength": 500 },
+        "featured": { "type": "boolean" },
+        "order": { "type": "number" }
+      },
+      "required": ["id", "name", "slug", "order"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order with tracking and payment status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "orderNumber": { "type": "string", "maxLength": 64 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "userName": { "type": "string", "maxLength": 120 },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "deliveryCharge": { "type": "number" },
+        "finalTotal": { "type": "number" },
+        "paymentMethod": { "type": "string", "maxLength": 32 },
+        "paymentStatus": { "type": "string", "enum": ["PAID", "PENDING", "FAILED", "REFUNDED"] },
+        "orderStatus": { "type": "string", "maxLength": 40 },
+        "trackingNumber": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "finalTotal", "paymentMethod", "paymentStatus", "orderStatus", "createdAt"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Razorpay or COD payment transaction record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "orderId": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "amount": { "type": "number" },
+        "currency": { "type": "string", "maxLength": 10 },
+        "method": { "type": "string", "maxLength": 32 },
+        "status": { "type": "string", "enum": ["CREATED", "PAID", "PENDING", "FAILED", "REFUNDED"] },
+        "razorpayOrderId": { "type": "string", "maxLength": 128 },
+        "razorpayPaymentId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "amount", "currency", "method", "status", "createdAt"]
+    },
+    "Address": {
+      "title": "Address",
+      "description": "Saved customer delivery address in Andhra Pradesh",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "maxLength": 128 },
+        "fullName": { "type": "string", "maxLength": 120 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "pincode": { "type": "string", "maxLength": 10 },
+        "state": { "type": "string", "maxLength": 60 },
+        "district": { "type": "string", "maxLength": 100 },
+        "city": { "type": "string", "maxLength": 100 },
+        "street": { "type": "string", "maxLength": 300 },
+        "isDefault": { "type": "boolean" }
+      },
+      "required": ["id", "userId", "fullName", "phone", "pincode", "city", "street"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User order, promo, or seller notification",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 160 },
+        "message": { "type": "string", "maxLength": 500 },
+        "type": { "type": "string", "enum": ["ORDER", "PROMO", "SYSTEM", "SELLER"] },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "title", "message", "type", "read", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile documents"
+    },
+    "/sellers/{sellerId}": {
+      "schema": { "$ref": "#/entities/Seller" },
+      "description": "Seller store documents"
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Product catalog documents"
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Product category documents"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer order documents"
+    },
+    "/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/Payment" },
+      "description": "Payment transaction documents"
+    },
+    "/addresses/{addressId}": {
+      "schema": { "$ref": "#/entities/Address" },
+      "description": "Customer saved addresses"
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "Customer and seller notifications"
+    }
+  }
+}

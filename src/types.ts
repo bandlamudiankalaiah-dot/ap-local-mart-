@@ -9,6 +9,9 @@ export interface User {
   avatar?: string;
   isVerified: boolean;
   sellerId?: string;
+  storeName?: string;
+  addresses?: Address[];
+  passwordHash?: string;
   createdAt: string;
 }
 
@@ -40,6 +43,10 @@ export interface Seller {
   totalSales: number;
   totalOrders: number;
   isKycVerified: boolean;
+  kycStatus?: 'VERIFIED' | 'PENDING' | 'REJECTED';
+  ownerName?: string;
+  district?: string;
+  gstin?: string;
   businessType: 'INDIVIDUAL' | 'PROPRIETORSHIP' | 'PARTNERSHIP' | 'PVT_LTD';
   gstNumber?: string;
   panNumber: string;
@@ -77,6 +84,7 @@ export interface Category {
   description: string;
   featured: boolean;
   order: number;
+  itemCount?: number;
 }
 
 export interface Subcategory {
@@ -160,8 +168,10 @@ export type PaymentMethod =
   | 'UPI'
   | 'CARD'
   | 'NET_BANKING'
+  | 'NETBANKING'
   | 'WALLET'
-  | 'COD';
+  | 'COD'
+  | 'RAZORPAY';
 
 export type PaymentStatus =
   | 'PAID'
@@ -213,7 +223,12 @@ export interface Order {
     bankName?: string;
     walletName?: string;
     transactionId: string;
+    razorpayOrderId?: string;
+    razorpayPaymentId?: string;
+    razorpaySignature?: string;
     status?: string;
+    gateway?: string;
+    timestamp?: string;
   };
   orderStatus: OrderStatus;
   status?: OrderStatus;
@@ -221,7 +236,9 @@ export interface Order {
   trackingNumber: string;
   tracking?: {
     awbNumber?: string;
+    trackingNumber?: string;
     carrier?: string;
+    courier?: string;
     currentHub?: string;
     estimatedDeliveryDate?: string;
   };

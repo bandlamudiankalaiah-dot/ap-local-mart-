@@ -7,9 +7,20 @@ interface AuthContextType {
   token: string | null;
   role: UserRole;
   isAuthenticated: boolean;
-  login: (identifier: string, role?: UserRole) => Promise<boolean>;
+  login: (identifier: string, role?: UserRole, password?: string) => Promise<boolean>;
   loginWithOtp: (phone: string, otp: string, name?: string) => Promise<boolean>;
-  register: (data: { name: string; email?: string; phone?: string; role: UserRole; storeName?: string }) => Promise<boolean>;
+  register: (data: {
+    name: string;
+    email?: string;
+    phone?: string;
+    role: UserRole;
+    password?: string;
+    storeName?: string;
+    pickupPincode?: string;
+    pickupDistrict?: string;
+    pickupAddress?: string;
+  }) => Promise<boolean>;
+  updateUserProfile: (data: { name?: string; email?: string; phone?: string; avatar?: string }) => Promise<boolean>;
   logout: () => void;
   switchRoleQuick: (role: UserRole) => void;
   loading: boolean;
@@ -23,8 +34,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Initial fetch of current user
-    api.getMe(token || undefined)
+    api
+      .getMe(token || undefined)
       .then(res => {
         if (res.user) {
           setUser(res.user);
@@ -34,9 +45,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .finally(() => setLoading(false));
   }, [token]);
 
-  const login = async (identifier: string, role?: UserRole): Promise<boolean> => {
+  const login = async (identifier: string, role?: UserRole, password?: string): Promise<boolean> => {
     try {
-      const res = await api.login(identifier, role);
+      const res = await api.login(identifier, role, password);
       if (res.user) {
         setUser(res.user);
         setToken(res.token);
@@ -64,13 +75,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (data: { name: string; email?: string; phone?: string; role: UserRole; storeName?: string }): Promise<boolean> => {
+  const register = async (data: {
+    name: string;
+    email?: string;
+    phone?: string;
+    role: UserRole;
+    password?: string;
+    storeName?: string;
+    pickupPincode?: string;
+    pickupDistrict?: string;
+    pickupAddress?: string;
+  }): Promise<boolean> => {
     try {
       const res = await api.register(data);
       if (res.user) {
         setUser(res.user);
         setToken(res.token);
         localStorage.setItem('andhramart_token', res.token);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
+  const updateUserProfile = async (data: { name?: string; email?: string; phone?: string; avatar?: string }): Promise<boolean> => {
+    try {
+      const res = await api.updateProfile({ userId: user?.id, ...data });
+      if (res.user) {
+        setUser(res.user);
         return true;
       }
       return false;
@@ -105,6 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         loginWithOtp,
         register,
+        updateUserProfile,
         logout,
         switchRoleQuick,
         loading

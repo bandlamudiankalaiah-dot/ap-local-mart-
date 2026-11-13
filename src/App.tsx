@@ -24,8 +24,10 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider, useCart } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 
-import { Product, Category, Banner, FilterState, Order } from './types';
+import { Product, Category, Banner, FilterState, Order, Seller } from './types';
 import { api } from './services/api';
+import { getSocket } from './services/socket';
+import './lib/firebase';
 import {
   Sparkles,
   ArrowRight,
@@ -37,7 +39,8 @@ import {
   Flame,
   CheckCircle2,
   Layers,
-  MapPin
+  MapPin,
+  Store
 } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
@@ -49,13 +52,16 @@ const MainAppContent: React.FC = () => {
   // Navigation State
   const [activeView, setActiveView] = useState<'home' | 'products' | 'orders' | 'wishlist' | 'seller' | 'admin' | 'profile'>('home');
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
+  const [selectedStoreId, setSelectedStoreId] = useState<string | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Data states
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [stores, setStores] = useState<Seller[]>([]);
   const [loading, setLoading] = useState(true);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Filters State
   const [filters, setFilters] = useState<FilterState>({
@@ -73,22 +79,71 @@ const MainAppContent: React.FC = () => {
   const [returningOrder, setReturningOrder] = useState<Order | null>(null);
   const [selectedTrackingOrderId, setSelectedTrackingOrderId] = useState<string | undefined>(undefined);
 
-  // Load Initial API Data
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  // Load Initial API Data & Subscribe to Real-Time Socket.IO Events
   useEffect(() => {
     loadCatalogData();
+
+    const socket = getSocket();
+    const handleInventoryUpdated = (data: { productId: string; stock: number; product?: Product }) => {
+      setProducts(prev =>
+        prev.map(p => (p.id === data.productId ? { ...p, stock: data.stock } : p))
+      );
+      setSelectedProduct(prev =>
+        prev && prev.id === data.productId ? { ...prev, stock: data.stock } : prev
+      );
+    };
+    const handleProductCreated = (newProd: Product) => {
+      setProducts(prev => {
+        if (prev.some(p => p.id === newProd.id)) return prev;
+        return [newProd, ...prev];
+      });
+    };
+    const handleProductUpdated = (updatedProd: Product) => {
+      setProducts(prev => prev.map(p => (p.id === updatedProd.id ? updatedProd : p)));
+    };
+    const handleProductDeleted = (data: { productId: string }) => {
+      setProducts(prev => prev.filter(p => p.id !== data.productId));
+    };
+    const handleCategoryCreated = (newCat: Category) => {
+      setCategories(prev => {
+        if (prev.some(c => c.id === newCat.id)) return prev;
+        return [...prev, newCat];
+      });
+    };
+
+    socket.on('inventory:updated', handleInventoryUpdated);
+    socket.on('product:created', handleProductCreated);
+    socket.on('product:updated', handleProductUpdated);
+    socket.on('product:deleted', handleProductDeleted);
+    socket.on('category:created', handleCategoryCreated);
+
+    return () => {
+      socket.off('inventory:updated', handleInventoryUpdated);
+      socket.off('product:created', handleProductCreated);
+      socket.off('product:updated', handleProductUpdated);
+      socket.off('product:deleted', handleProductDeleted);
+      socket.off('category:created', handleCategoryCreated);
+    };
   }, []);
 
   const loadCatalogData = async () => {
     setLoading(true);
     try {
-      const [prodRes, catRes, banRes] = await Promise.all([
+      const [prodRes, catRes, banRes, storeRes] = await Promise.all([
         api.getProducts(),
         api.getCategories(),
-        api.getBanners()
+        api.getBanners(),
+        api.getStores()
       ]);
       setProducts(prodRes.products || []);
       setCategories(catRes.categories || []);
       setBanners(banRes.banners || []);
+      setStores(storeRes.stores || []);
     } catch {
       // Fallbacks
     }
@@ -98,8 +153,17 @@ const MainAppContent: React.FC = () => {
   // Sync category selection with filter
   const handleSelectCategory = (catId?: string) => {
     setSelectedCategory(catId);
+    setSelectedStoreId(undefined);
     setFilters(prev => ({ ...prev, categoryId: catId }));
     setSearchQuery('');
+  };
+
+  const handleSelectStore = (sellerId?: string) => {
+    setSelectedStoreId(sellerId);
+    setSelectedCategory(undefined);
+    setFilters(prev => ({ ...prev, categoryId: undefined }));
+    setSearchQuery('');
+    setActiveView('products');
   };
 
   const handleSearch = (query: string) => {
@@ -111,6 +175,11 @@ const MainAppContent: React.FC = () => {
   const filteredProducts = useMemo(() => {
     let list = [...products];
 
+    // Store filter
+    if (selectedStoreId) {
+      list = list.filter(p => p.sellerId === selectedStoreId);
+    }
+
     // Search query filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -119,6 +188,7 @@ const MainAppContent: React.FC = () => {
           p.title.toLowerCase().includes(q) ||
           p.description.toLowerCase().includes(q) ||
           p.brand.toLowerCase().includes(q) ||
+          (p.sellerName && p.sellerName.toLowerCase().includes(q)) ||
           (p.originDistrict && p.originDistrict.toLowerCase().includes(q))
       );
     }
@@ -168,7 +238,7 @@ const MainAppContent: React.FC = () => {
     }
 
     return list;
-  }, [products, searchQuery, filters]);
+  }, [products, searchQuery, filters, selectedStoreId]);
 
   // Derived lists for Home page
   const andhraSpecialProducts = useMemo(() => products.filter(p => p.isAndhraSpecial), [products]);
@@ -182,10 +252,19 @@ const MainAppContent: React.FC = () => {
   const handleOrderSuccess = (order: Order) => {
     setSelectedTrackingOrderId(order.id);
     setActiveView('orders');
+    loadCatalogData();
   };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 selection:bg-amber-500 selection:text-white">
+      {/* Global Non-Blocking Toast Banner */}
+      {toastMessage && (
+        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl border border-amber-500/40 flex items-center gap-2.5 text-xs font-bold">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Header */}
       <Header
         activeView={activeView}
@@ -235,7 +314,7 @@ const MainAppContent: React.FC = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-8 gap-3">
                 {categories.map(cat => (
                   <div
                     key={cat.id}
@@ -256,6 +335,56 @@ const MainAppContent: React.FC = () => {
                 ))}
               </div>
             </section>
+
+            {/* SHOP BY AP LOCAL STORES & FARMERS */}
+            {stores.length > 0 && (
+              <section className="max-w-7xl mx-auto px-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-amber-100 text-amber-800">
+                      <Store className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base sm:text-lg font-black text-slate-900">
+                        {language === 'te' ? 'ఆంధ్రప్రదేశ్ స్థానిక దుకాణాలు & రైతులు' : 'Shop by Verified AP Local Stores & Farmers'}
+                      </h3>
+                      <p className="text-xs text-slate-500">Browse store-wise products directly from Rythu Bazaars, Weavers & Local Artisans</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {stores.map(st => (
+                    <div
+                      key={st.id}
+                      onClick={() => handleSelectStore(st.id)}
+                      className="p-4 rounded-2xl bg-white border border-slate-200 hover:border-amber-500 shadow-2xs hover:shadow-md transition cursor-pointer flex items-center justify-between gap-4 group"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-extrabold text-sm text-slate-900 group-hover:text-amber-800 transition">
+                            {st.storeName || st.businessName}
+                          </h4>
+                          <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-[10px] font-bold">
+                            ★ {st.rating || 4.8}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5 text-amber-600" />
+                          <span>{st.district} District, Andhra Pradesh</span>
+                        </p>
+                        <p className="text-[11px] font-semibold text-amber-800">
+                          {(st as any).productCount ?? products.filter(p => p.sellerId === st.id).length} Live Products Available →
+                        </p>
+                      </div>
+                      <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-800 group-hover:bg-amber-500 group-hover:text-slate-950 transition shrink-0">
+                        <ChevronRight className="w-5 h-5" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* ANDHRA SPECIALS SPOTLIGHT (GI Tagged Heritage Goods) */}
             <section className="max-w-7xl mx-auto px-4">
@@ -421,12 +550,32 @@ const MainAppContent: React.FC = () => {
                   <button onClick={() => setActiveView('home')} className="hover:text-slate-700">Home</button>
                   <span>/</span>
                   <span className="font-semibold text-slate-700">
-                    {filters.categoryId ? categories.find(c => c.id === filters.categoryId)?.name : 'All Products'}
+                    {selectedStoreId
+                      ? stores.find(s => s.id === selectedStoreId)?.storeName || 'Local Store'
+                      : filters.categoryId
+                      ? categories.find(c => c.id === filters.categoryId)?.name
+                      : 'All Products'}
                   </span>
                 </div>
-                <h2 className="text-2xl font-black font-serif text-slate-900">
-                  {searchQuery ? `Search Results for "${searchQuery}"` : filters.categoryId ? categories.find(c => c.id === filters.categoryId)?.name : 'Andhra Marketplace Catalog'}
-                </h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-black font-serif text-slate-900">
+                    {selectedStoreId
+                      ? `${stores.find(s => s.id === selectedStoreId)?.storeName || 'AP Local Store'} Catalog`
+                      : searchQuery
+                      ? `Search Results for "${searchQuery}"`
+                      : filters.categoryId
+                      ? categories.find(c => c.id === filters.categoryId)?.name
+                      : 'Andhra Marketplace Catalog'}
+                  </h2>
+                  {selectedStoreId && (
+                    <button
+                      onClick={() => setSelectedStoreId(undefined)}
+                      className="px-2.5 py-1 bg-amber-100 text-amber-900 rounded-lg text-xs font-bold hover:bg-amber-200"
+                    >
+                      Clear Store Filter ×
+                    </button>
+                  )}
+                </div>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">
                   Showing {filteredProducts.length} items available for fast AP delivery to <strong className="font-mono text-amber-800">{currentPincode}</strong>
                 </p>
@@ -476,6 +625,7 @@ const MainAppContent: React.FC = () => {
                         setSearchQuery('');
                         setFilters({ sortBy: 'popularity', brands: [] });
                         setSelectedCategory(undefined);
+                        setSelectedStoreId(undefined);
                       }}
                       className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-xs transition"
                     >
@@ -528,7 +678,7 @@ const MainAppContent: React.FC = () => {
         {activeView === 'seller' && <SellerDashboard categories={categories} />}
 
         {/* VIEW 7: ADMIN CONTROL CENTER */}
-        {activeView === 'admin' && <AdminDashboard categories={categories} />}
+        {activeView === 'admin' && <AdminDashboard categories={categories} onRefreshCatalog={loadCatalogData} />}
       </main>
 
       {/* Footer */}
@@ -581,7 +731,7 @@ const MainAppContent: React.FC = () => {
         onClose={() => setReviewingProduct(null)}
         onSuccess={() => {
           loadCatalogData();
-          alert('Thank you! Your verified Andhra review has been submitted.');
+          showToast('Thank you! Your verified Andhra review has been submitted.');
         }}
       />
 
@@ -591,7 +741,7 @@ const MainAppContent: React.FC = () => {
         onClose={() => setReturningOrder(null)}
         onSuccess={() => {
           setActiveView('orders');
-          alert('Return request submitted successfully. AP Logistics partner will contact you.');
+          showToast('Return request submitted successfully. AP Logistics partner will contact you.');
         }}
       />
     </div>

@@ -1,7 +1,7 @@
+import axios from 'axios';
 import {
   Product,
   Category,
-  Subcategory,
   User,
   Address,
   Seller,
@@ -13,338 +13,355 @@ import {
   PincodeInfo
 } from '../types';
 
-const API_BASE = '/api';
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || '/api';
+
+export const httpClient = axios.create({
+  baseURL: API_BASE,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+httpClient.interceptors.request.use(config => {
+  const token = localStorage.getItem('andhramart_token');
+  if (token && config.headers) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+async function safeRequest<T = any>(promise: Promise<{ data: T }>): Promise<T> {
+  try {
+    const res = await promise;
+    return res.data;
+  } catch (err: any) {
+    if (err.response && err.response.data) {
+      return err.response.data;
+    }
+    throw err;
+  }
+}
 
 export const api = {
   // Auth
-  async register(data: { name: string; email?: string; phone?: string; role: string; storeName?: string }) {
-    const res = await fetch(`${API_BASE}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    return res.json();
+  async register(data: {
+    name: string;
+    email?: string;
+    phone?: string;
+    role: string;
+    password?: string;
+    storeName?: string;
+    pickupPincode?: string;
+    pickupDistrict?: string;
+    pickupAddress?: string;
+  }) {
+    return safeRequest(httpClient.post('/auth/register', data));
   },
 
-  async login(identifier: string, role?: string) {
-    const res = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ identifier, role })
-    });
-    return res.json();
+  async login(identifier: string, role?: string, password?: string) {
+    return safeRequest(httpClient.post('/auth/login', { identifier, role, password }));
+  },
+
+  async forgotPassword(identifier: string) {
+    return safeRequest(httpClient.post('/auth/forgot-password', { identifier }));
+  },
+
+  async resetPassword(identifier: string, otp: string, newPassword: string) {
+    return safeRequest(httpClient.post('/auth/reset-password', { identifier, otp, newPassword }));
   },
 
   async sendOtp(phone: string) {
-    const res = await fetch(`${API_BASE}/auth/otp-send`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone })
-    });
-    return res.json();
+    return safeRequest(httpClient.post('/auth/otp-send', { phone }));
   },
 
   async verifyOtp(phone: string, otp: string, name?: string) {
-    const res = await fetch(`${API_BASE}/auth/otp-verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone, otp, name })
-    });
-    return res.json();
+    return safeRequest(httpClient.post('/auth/otp-verify', { phone, otp, name }));
   },
 
   async getMe(token?: string) {
-    const res = await fetch(`${API_BASE}/auth/me`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
-    });
-    return res.json();
+    return safeRequest(
+      httpClient.get('/auth/me', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
+    );
   },
 
-  // Products & Categories
+  async updateProfile(data: { userId?: string; name?: string; email?: string; phone?: string; avatar?: string }) {
+    return safeRequest(httpClient.put('/users/profile', data));
+  },
+
+  // Products, Stores & Categories
   async getProducts(params?: Record<string, string | number | boolean | undefined>) {
-    const query = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([k, v]) => {
-        if (v !== undefined && v !== '') query.append(k, String(v));
-      });
-    }
-    const res = await fetch(`${API_BASE}/products?${query.toString()}`);
-    return res.json();
+    return safeRequest(httpClient.get('/products', { params }));
   },
 
   async getProduct(id: string) {
-    const res = await fetch(`${API_BASE}/products/${id}`);
-    return res.json();
+    return safeRequest(httpClient.get(`/products/${id}`));
+  },
+
+  async getStores() {
+    return safeRequest(httpClient.get('/stores'));
   },
 
   async getCategories() {
-    const res = await fetch(`${API_BASE}/categories`);
-    return res.json();
+    return safeRequest(httpClient.get('/categories'));
   },
 
   async getBanners() {
-    const res = await fetch(`${API_BASE}/banners`);
-    return res.json();
+    return safeRequest(httpClient.get('/banners'));
   },
 
   async getSearchSuggestions(q: string) {
-    const res = await fetch(`${API_BASE}/search/suggestions?q=${encodeURIComponent(q)}`);
-    return res.json();
+    return safeRequest(httpClient.get('/search/suggestions', { params: { q } }));
   },
 
   // Pincode
   async checkPincode(pincode: string): Promise<PincodeInfo> {
-    const res = await fetch(`${API_BASE}/pincode/${pincode}`);
-    if (!res.ok) {
-      throw new Error('Invalid pincode or not serviceable');
-    }
-    return res.json();
+    const res = await httpClient.get(`/pincode/${pincode}`);
+    return res.data;
   },
 
   // Cart
-  async getCart(userId?: string) {
-    const res = await fetch(`${API_BASE}/cart?userId=${userId || 'user-customer-demo'}`);
-    return res.json();
+  async getCart(userId?: string, pincode?: string) {
+    return safeRequest(
+      httpClient.get('/cart', {
+        params: { userId: userId || 'user-customer-demo', pincode }
+      })
+    );
   },
 
   async addToCart(productId: string, quantity = 1, selectedVariant?: string, userId?: string) {
-    const res = await fetch(`${API_BASE}/cart/add`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productId, quantity, selectedVariant, userId })
-    });
-    return res.json();
+    return safeRequest(
+      httpClient.post('/cart/add', { productId, quantity, selectedVariant, userId })
+    );
   },
 
   async updateCartItem(id: string, quantity: number, userId?: string) {
-    const res = await fetch(`${API_BASE}/cart/item/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quantity, userId })
-    });
-    return res.json();
+    return safeRequest(httpClient.put(`/cart/item/${id}`, { quantity, userId }));
   },
 
   async removeCartItem(id: string, userId?: string) {
-    const res = await fetch(`${API_BASE}/cart/item/${id}?userId=${userId || 'user-customer-demo'}`, {
-      method: 'DELETE'
-    });
-    return res.json();
+    return safeRequest(
+      httpClient.delete(`/cart/item/${id}`, {
+        params: { userId: userId || 'user-customer-demo' }
+      })
+    );
   },
 
   async clearCart(userId?: string) {
-    const res = await fetch(`${API_BASE}/cart/clear?userId=${userId || 'user-customer-demo'}`, {
-      method: 'DELETE'
-    });
-    return res.json();
+    return safeRequest(
+      httpClient.delete('/cart/clear', {
+        params: { userId: userId || 'user-customer-demo' }
+      })
+    );
+  },
+
+  // Wishlist
+  async getWishlist(userId?: string) {
+    return safeRequest(
+      httpClient.get('/wishlist', {
+        params: { userId: userId || 'user-customer-demo' }
+      })
+    );
+  },
+
+  async toggleWishlistApi(productId: string, userId?: string) {
+    return safeRequest(
+      httpClient.post('/wishlist/toggle', {
+        productId,
+        userId: userId || 'user-customer-demo'
+      })
+    );
   },
 
   // Addresses
   async getAddresses(userId?: string) {
-    const res = await fetch(`${API_BASE}/addresses?userId=${userId || 'user-customer-demo'}`);
-    return res.json();
+    return safeRequest(
+      httpClient.get('/addresses', {
+        params: { userId: userId || 'user-customer-demo' }
+      })
+    );
   },
 
   async addAddress(address: Partial<Address>, userId?: string) {
-    const res = await fetch(`${API_BASE}/addresses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...address, userId })
-    });
-    return res.json();
+    return safeRequest(httpClient.post('/addresses', { ...address, userId }));
   },
 
   async deleteAddress(id: string, userId?: string) {
-    const res = await fetch(`${API_BASE}/addresses/${id}?userId=${userId || 'user-customer-demo'}`, {
-      method: 'DELETE'
-    });
-    return res.json();
+    return safeRequest(
+      httpClient.delete(`/addresses/${id}`, {
+        params: { userId: userId || 'user-customer-demo' }
+      })
+    );
   },
 
   // Coupons
   async getCoupons() {
-    const res = await fetch(`${API_BASE}/coupons`);
-    return res.json();
+    return safeRequest(httpClient.get('/coupons'));
   },
 
   async validateCoupon(code: string, orderAmount: number) {
-    const res = await fetch(`${API_BASE}/coupons/validate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, orderAmount })
-    });
-    return res.json();
+    return safeRequest(httpClient.post('/coupons/validate', { code, orderAmount }));
+  },
+
+  // Razorpay Payments
+  async createRazorpayOrder(amount: number, userId?: string, method?: string) {
+    return safeRequest(
+      httpClient.post('/payments/razorpay/create-order', { amount, userId, method })
+    );
+  },
+
+  async verifyRazorpayPayment(data: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+    simulateFailure?: boolean;
+  }) {
+    return safeRequest(httpClient.post('/payments/razorpay/verify', data));
   },
 
   // Orders
   async getOrders(userId?: string, sellerId?: string) {
-    const query = new URLSearchParams();
-    if (userId) query.append('userId', userId);
-    if (sellerId) query.append('sellerId', sellerId);
-    const res = await fetch(`${API_BASE}/orders?${query.toString()}`);
-    return res.json();
+    return safeRequest(httpClient.get('/orders', { params: { userId, sellerId } }));
+  },
+
+  async getMyOrders(userId?: string) {
+    return safeRequest(httpClient.get('/orders/my-orders', { params: { userId } }));
   },
 
   async getOrder(id: string) {
-    const res = await fetch(`${API_BASE}/orders/${id}`);
-    return res.json();
+    return safeRequest(httpClient.get(`/orders/${id}`));
   },
 
   async createOrder(orderData: any) {
-    const res = await fetch(`${API_BASE}/orders/create`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(orderData)
-    });
-    return res.json();
+    return safeRequest(httpClient.post('/orders/create', orderData));
   },
 
   async cancelOrder(id: string, reason: string) {
-    const res = await fetch(`${API_BASE}/orders/${id}/cancel`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reason })
-    });
-    return res.json();
+    return safeRequest(httpClient.post(`/orders/${id}/cancel`, { reason }));
   },
 
   async returnOrder(id: string, reason: string, notes?: string) {
-    const res = await fetch(`${API_BASE}/orders/${id}/return`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reason, notes })
-    });
-    return res.json();
+    return safeRequest(httpClient.post(`/orders/${id}/return`, { reason, notes }));
   },
 
   // Reviews
   async getProductReviews(productId: string) {
-    const res = await fetch(`${API_BASE}/reviews/product/${productId}`);
-    return res.json();
+    return safeRequest(httpClient.get(`/reviews/product/${productId}`));
   },
 
   async addReview(data: Partial<Review>) {
-    const res = await fetch(`${API_BASE}/reviews/create`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    return res.json();
+    return safeRequest(httpClient.post('/reviews/create', data));
   },
 
   // Notifications
   async getNotifications(userId?: string) {
-    const res = await fetch(`${API_BASE}/notifications?userId=${userId || 'user-customer-demo'}`);
-    return res.json();
+    return safeRequest(
+      httpClient.get('/notifications', {
+        params: { userId: userId || 'user-customer-demo' }
+      })
+    );
+  },
+
+  async markNotificationRead(id: string) {
+    return safeRequest(httpClient.put(`/notifications/${id}/read`));
   },
 
   // Seller Operations
   async getSellerProfile(sellerId?: string) {
-    const res = await fetch(`${API_BASE}/seller/profile?sellerId=${sellerId || 'seller-godavari-heritage'}`);
-    return res.json();
+    return safeRequest(
+      httpClient.get('/seller/profile', {
+        params: { sellerId: sellerId || 'seller-godavari-heritage' }
+      })
+    );
+  },
+
+  async updateSellerProfile(data: Partial<Seller> & { sellerId?: string }) {
+    return safeRequest(httpClient.put('/seller/profile', data));
   },
 
   async submitSellerKyc(data: any) {
-    const res = await fetch(`${API_BASE}/seller/kyc`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    return res.json();
+    return safeRequest(httpClient.post('/seller/kyc', data));
   },
 
   async getSellerProducts(sellerId?: string) {
-    const res = await fetch(`${API_BASE}/seller/products?sellerId=${sellerId || 'seller-godavari-heritage'}`);
-    return res.json();
+    return safeRequest(
+      httpClient.get('/seller/products', {
+        params: { sellerId: sellerId || 'seller-godavari-heritage' }
+      })
+    );
   },
 
   async addSellerProduct(product: Partial<Product>) {
-    const res = await fetch(`${API_BASE}/seller/products`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(product)
-    });
-    return res.json();
+    return safeRequest(httpClient.post('/seller/products', product));
   },
 
   async updateSellerProduct(id: string, product: Partial<Product>) {
-    const res = await fetch(`${API_BASE}/seller/products/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(product)
-    });
-    return res.json();
+    return safeRequest(httpClient.put(`/seller/products/${id}`, product));
   },
 
   async deleteSellerProduct(id: string) {
-    const res = await fetch(`${API_BASE}/seller/products/${id}`, {
-      method: 'DELETE'
-    });
-    return res.json();
+    return safeRequest(httpClient.delete(`/seller/products/${id}`));
   },
 
   async updateSellerOrderStatus(id: string, status: string, trackingNote?: string, location?: string) {
-    const res = await fetch(`${API_BASE}/seller/orders/${id}/status`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, trackingNote, location })
-    });
-    return res.json();
+    return safeRequest(
+      httpClient.put(`/seller/orders/${id}/status`, { status, trackingNote, location })
+    );
   },
 
   async getSellerAnalytics(sellerId?: string) {
-    const res = await fetch(`${API_BASE}/seller/analytics?sellerId=${sellerId || 'seller-godavari-heritage'}`);
-    return res.json();
+    return safeRequest(
+      httpClient.get('/seller/dashboard', {
+        params: { sellerId: sellerId || 'seller-godavari-heritage' }
+      })
+    );
   },
 
   // Admin Operations
   async getAdminStats() {
-    const res = await fetch(`${API_BASE}/admin/stats`);
-    return res.json();
+    return safeRequest(httpClient.get('/admin/dashboard'));
   },
 
   async getAdminUsers() {
-    const res = await fetch(`${API_BASE}/admin/users`);
-    return res.json();
+    return safeRequest(httpClient.get('/admin/users'));
+  },
+
+  async deleteAdminUser(id: string) {
+    return safeRequest(httpClient.delete(`/admin/users/${id}`));
   },
 
   async getAdminSellers() {
-    const res = await fetch(`${API_BASE}/admin/sellers`);
-    return res.json();
+    return safeRequest(httpClient.get('/admin/sellers'));
   },
 
   async verifySellerKyc(sellerId: string, status: 'APPROVED' | 'REJECTED', notes?: string) {
-    const res = await fetch(`${API_BASE}/admin/sellers/${sellerId}/kyc`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, notes })
-    });
-    return res.json();
+    return safeRequest(httpClient.put(`/admin/sellers/${sellerId}/kyc`, { status, notes }));
   },
 
   async addAdminCategory(category: Partial<Category>) {
-    const res = await fetch(`${API_BASE}/admin/categories`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(category)
-    });
-    return res.json();
+    return safeRequest(httpClient.post('/admin/categories', category));
+  },
+
+  async deleteAdminCategory(id: string) {
+    return safeRequest(httpClient.delete(`/admin/categories/${id}`));
   },
 
   async addAdminCoupon(coupon: Partial<Coupon>) {
-    const res = await fetch(`${API_BASE}/admin/coupons`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(coupon)
-    });
-    return res.json();
+    return safeRequest(httpClient.post('/admin/coupons', coupon));
   },
 
   async deleteAdminCoupon(id: string) {
-    const res = await fetch(`${API_BASE}/admin/coupons/${id}`, {
-      method: 'DELETE'
-    });
-    return res.json();
+    return safeRequest(httpClient.delete(`/admin/coupons/${id}`));
+  },
+
+  async updateDeliverySettings(settings: {
+    freeDeliveryThreshold?: number;
+    apExpressFee?: number;
+    apStandardFee?: number;
+    outsideApFee?: number;
+  }) {
+    return safeRequest(httpClient.put('/admin/delivery-settings', settings));
   },
 
   // Aliases for compatibility
@@ -377,7 +394,7 @@ export const api = {
   },
 
   async approveSeller(sellerId: string) {
-    return this.verifySellerKyc(sellerId, 'APPROVED', 'Verified by AndhraMart Admin');
+    return this.verifySellerKyc(sellerId, 'APPROVED', 'Verified by AP Local Mart Admin');
   },
 
   async rejectSeller(sellerId: string, reason?: string) {
@@ -388,4 +405,3 @@ export const api = {
     return this.addAdminCoupon(coupon);
   }
 };
-

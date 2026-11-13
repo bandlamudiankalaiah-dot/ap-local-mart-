@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
-  MapPin,
   Truck,
   CreditCard,
   QrCode,
@@ -12,8 +11,8 @@ import {
   Plus,
   Building,
   Smartphone,
-  Sparkles,
-  Zap
+  Zap,
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -39,24 +38,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [step, setStep] = useState<'address' | 'payment' | 'processing' | 'success'>('address');
 
   // Address selection state
-  const [addresses, setAddresses] = useState<Address[]>(() => {
-    if (user?.addresses && user.addresses.length > 0) return user.addresses;
-    return [
-      {
-        id: 'addr-default-1',
-        fullName: user?.name || 'Sai Kumar',
-        phone: user?.phone || '+91 98480 12345',
-        street: 'D.No. 40-1-52, MG Road, Labbipet',
-        city: 'Vijayawada',
-        district: 'NTR (Vijayawada)',
-        state: 'Andhra Pradesh',
-        pincode: currentPincode || '520001',
-        isDefault: true,
-        type: 'HOME'
-      }
-    ];
-  });
-  const [selectedAddressId, setSelectedAddressId] = useState<string>('addr-default-1');
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
 
   // New Address Form fields
@@ -64,7 +47,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [newPhone, setNewPhone] = useState(user?.phone || '');
   const [newStreet, setNewStreet] = useState('');
   const [newCity, setNewCity] = useState(pincodeInfo?.city || 'Vijayawada');
-  const [newDistrict, setNewDistrict] = useState(pincodeInfo?.district || 'NTR (Vijayawada)');
+  const [newDistrict, setNewDistrict] = useState(pincodeInfo?.district || 'NTR / Krishna');
   const [newPincode, setNewPincode] = useState(currentPincode || '520001');
 
   // Payment selection state
@@ -76,33 +59,73 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [selectedBank, setSelectedBank] = useState('State Bank of India (SBI / erstwhile Andhra Bank)');
   const [selectedWallet, setSelectedWallet] = useState('PhonePe UPI');
   const [deliverySpeed, setDeliverySpeed] = useState<'express' | 'standard'>('express');
+  const [razorpayTestOutcome, setRazorpayTestOutcome] = useState<'success' | 'failure'>('success');
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
 
+  useEffect(() => {
+    if (isOpen) {
+      setStep('address');
+      setErrorMsg('');
+      loadUserAddresses();
+    }
+  }, [isOpen, user?.id]);
+
+  const loadUserAddresses = async () => {
+    try {
+      const res = await api.getAddresses(user?.id);
+      if (res.addresses && res.addresses.length > 0) {
+        setAddresses(res.addresses);
+        setSelectedAddressId(res.addresses[0].id);
+        return;
+      }
+    } catch {
+      // Fallback
+    }
+    const fallback: Address = {
+      id: 'addr-default-1',
+      fullName: user?.name || 'Venkata Sai Kumar',
+      phone: user?.phone || '+91 98480 99999',
+      street: 'Flat 402, Godavari Heights, Benz Circle',
+      city: 'Vijayawada',
+      district: 'NTR / Krishna',
+      state: 'Andhra Pradesh',
+      pincode: currentPincode || '520001',
+      isDefault: true,
+      type: 'HOME'
+    };
+    setAddresses([fallback]);
+    setSelectedAddressId(fallback.id);
+  };
+
   if (!isOpen) return null;
 
-  const handleAddNewAddress = (e: React.FormEvent) => {
+  const handleAddNewAddress = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFullName || !newPhone || !newStreet || !newPincode) {
       setErrorMsg('Please fill in all address details');
       return;
     }
-    const newAddr: Address = {
-      id: `addr-${Date.now()}`,
-      fullName: newFullName,
-      phone: newPhone,
-      street: newStreet,
-      city: newCity,
-      district: newDistrict,
-      state: 'Andhra Pradesh',
-      pincode: newPincode,
-      isDefault: false,
-      type: 'HOME'
-    };
-    setAddresses(prev => [...prev, newAddr]);
-    setSelectedAddressId(newAddr.id);
+    const res = await api.addAddress(
+      {
+        fullName: newFullName,
+        phone: newPhone,
+        street: newStreet,
+        city: newCity,
+        district: newDistrict,
+        state: 'Andhra Pradesh',
+        pincode: newPincode,
+        isDefault: false,
+        type: 'HOME'
+      },
+      user?.id
+    );
+    if (res.address) {
+      setAddresses(res.addresses || [...addresses, res.address]);
+      setSelectedAddressId(res.address.id);
+    }
     setShowNewAddressForm(false);
     setErrorMsg('');
   };
@@ -119,9 +142,58 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setErrorMsg('');
 
     try {
-      // Simulate secure gateway tokenization
+      let paymentDetailsPayload: any = {
+        gateway: 'COD Doorstep Collection',
+        transactionId: `COD-AP-${Date.now()}`,
+        status: 'PENDING',
+        timestamp: new Date().toISOString()
+      };
+
+      // If non-COD, run real server-side Razorpay Order Creation + HMAC Verification
+      if (paymentMethod !== 'COD') {
+        const rzpOrder = await api.createRazorpayOrder(
+          finalTotal,
+          user?.id || 'user-customer-demo',
+          paymentMethod
+        );
+
+        if (!rzpOrder.success || !rzpOrder.razorpayOrderId) {
+          setLoading(false);
+          setStep('payment');
+          setErrorMsg(rzpOrder.error || 'Could not initialize Razorpay gateway order');
+          return;
+        }
+
+        const verifyRes = await api.verifyRazorpayPayment({
+          razorpay_order_id: rzpOrder.testPaymentCredentials.razorpay_order_id,
+          razorpay_payment_id: rzpOrder.testPaymentCredentials.razorpay_payment_id,
+          razorpay_signature: rzpOrder.testPaymentCredentials.razorpay_signature,
+          simulateFailure: razorpayTestOutcome === 'failure'
+        });
+
+        if (!verifyRes.success) {
+          setLoading(false);
+          setStep('payment');
+          setErrorMsg(verifyRes.error || 'Payment verification failed. Please retry.');
+          return;
+        }
+
+        paymentDetailsPayload = {
+          gateway: 'Razorpay Test Gateway (HMAC Verified)',
+          transactionId: verifyRes.transactionId,
+          razorpayOrderId: verifyRes.razorpayOrderId,
+          razorpayPaymentId: verifyRes.transactionId,
+          upiId: paymentMethod === 'UPI' ? upiId : undefined,
+          cardLast4: paymentMethod === 'CARD' ? cardNumber.slice(-4) : undefined,
+          bankName: paymentMethod === 'NETBANKING' ? selectedBank : undefined,
+          walletName: paymentMethod === 'WALLET' ? selectedWallet : undefined,
+          status: 'PAID',
+          timestamp: verifyRes.verifiedAt
+        };
+      }
+
       const orderPayload = {
-        userId: user?.id || 'usr-guest',
+        userId: user?.id || 'user-customer-demo',
         customerName: address.fullName,
         customerPhone: address.phone,
         items: items.map(i => ({
@@ -135,12 +207,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         })),
         shippingAddress: address,
         paymentMethod,
-        paymentDetails: {
-          gateway: 'Razorpay AP FastPay',
-          transactionId: `TXN-AP-${Date.now()}`,
-          status: paymentMethod === 'COD' ? 'PENDING' : 'COMPLETED',
-          timestamp: new Date().toISOString()
-        },
+        paymentDetails: paymentDetailsPayload,
         subtotal,
         deliveryFee: deliveryCharge,
         discount: couponDiscount,
@@ -155,7 +222,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         setCreatedOrder(result.order);
         setStep('success');
         clearCart();
-        onOrderSuccess(result.order);
       } else {
         setStep('payment');
         setErrorMsg(result.error || 'Failed to place order');
@@ -179,8 +245,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-extrabold text-lg text-slate-900">Secure AndhraMart Checkout</h3>
-              <p className="text-xs text-slate-500 font-medium">100% Encrypted Payment with Fast AP Delivery</p>
+              <h3 className="font-extrabold text-lg text-slate-900">Secure AP Local Mart Checkout</h3>
+              <p className="text-xs text-slate-500 font-medium">Razorpay Test Mode & Cash on Delivery with Live AP Tracking</p>
             </div>
           </div>
           <button
@@ -207,7 +273,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               className={`py-3 flex items-center justify-center gap-2 transition ${step === 'payment' ? 'border-b-2 border-amber-600 text-amber-900 bg-amber-50/50' : 'text-slate-500'}`}
             >
               <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 text-[11px] flex items-center justify-center font-mono">2</span>
-              <span>Payment & Place Order</span>
+              <span>Razorpay / COD Payment</span>
             </button>
           </div>
         )}
@@ -215,8 +281,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         {/* Content Body */}
         <div className="p-6 sm:p-8 flex-1">
           {errorMsg && (
-            <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
-              {errorMsg}
+            <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{errorMsg}</span>
             </div>
           )}
 
@@ -288,7 +355,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           type="text"
                           maxLength={6}
                           value={newPincode}
-                          onChange={e => setNewPincode(e.target.value)}
+                          onChange={e => setNewPincode(e.target.value.replace(/\D/g, ''))}
                           className="w-full p-2 bg-white border border-slate-300 rounded-lg font-mono"
                           required
                         />
@@ -312,11 +379,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-slate-900 text-sm">{addr.fullName}</span>
                           <span className="text-[10px] font-bold bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded">
-                            {addr.type}
+                            {addr.addressType || addr.type || 'HOME'}
                           </span>
                         </div>
                         <p className="text-slate-600 leading-snug">{addr.street}</p>
-                        <p className="text-slate-800 font-semibold">{addr.city}, {addr.district} - <span className="font-mono text-amber-800">{addr.pincode}</span></p>
+                        <p className="text-slate-800 font-semibold">
+                          {addr.city}, {addr.district} - <span className="font-mono text-amber-800">{addr.pincode}</span>
+                        </p>
                         <p className="text-slate-500 font-medium">📞 {addr.phone}</p>
                       </div>
                     ))}
@@ -341,7 +410,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         <div className="text-[11px] text-emerald-700 font-semibold">1-2 Days Guaranteed</div>
                       </div>
                     </div>
-                    <span className="font-bold text-emerald-800">FREE</span>
+                    <span className="font-bold text-emerald-800">{deliveryCharge === 0 ? 'FREE' : `₹${deliveryCharge}`}</span>
                   </div>
 
                   <div
@@ -357,7 +426,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         <div className="text-[11px] text-slate-500">3-4 Days</div>
                       </div>
                     </div>
-                    <span className="font-bold text-slate-700">FREE</span>
+                    <span className="font-bold text-slate-700">{deliveryCharge === 0 ? 'FREE' : `₹${deliveryCharge}`}</span>
                   </div>
                 </div>
               </div>
@@ -376,7 +445,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           )}
 
           {/* STEP 2: Payment */}
-          {step === 'payment' && (
+          {step === 'payment' && selectedAddr && (
             <div className="space-y-6">
               {/* Order summary pill */}
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
@@ -395,7 +464,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <h4 className="font-black text-sm text-slate-900 uppercase tracking-wider mb-3">Choose Payment Method</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs font-bold mb-4">
                   {[
-                    { id: 'UPI' as PaymentMethod, label: 'UPI / QR', icon: QrCode },
+                    { id: 'UPI' as PaymentMethod, label: 'Razorpay UPI', icon: QrCode },
                     { id: 'CARD' as PaymentMethod, label: 'Cards', icon: CreditCard },
                     { id: 'NETBANKING' as PaymentMethod, label: 'NetBanking', icon: Building },
                     { id: 'WALLET' as PaymentMethod, label: 'Wallets', icon: Smartphone },
@@ -416,11 +485,36 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   })}
                 </div>
 
+                {/* Razorpay Test Mode Simulator Control */}
+                {paymentMethod !== 'COD' && (
+                  <div className="mb-4 p-3 rounded-xl bg-blue-50 border border-blue-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div>
+                      <span className="font-bold text-blue-950 block">Razorpay Sandbox Test Mode</span>
+                      <span className="text-[11px] text-blue-700">Server-side HMAC SHA-256 signature verification enabled</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setRazorpayTestOutcome('success')}
+                        className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition ${razorpayTestOutcome === 'success' ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}`}
+                      >
+                        Test Success
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRazorpayTestOutcome('failure')}
+                        className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition ${razorpayTestOutcome === 'failure' ? 'bg-red-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}`}
+                      >
+                        Test Failure
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Sub-view for UPI */}
                 {paymentMethod === 'UPI' && (
                   <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-4">
                     <div className="flex flex-col sm:flex-row items-center gap-4">
-                      {/* Simulated QR Code */}
                       <div className="p-2 bg-white rounded-xl shadow-xs border border-amber-300 text-center">
                         <div className="w-32 h-32 bg-slate-900 p-2 rounded-lg flex flex-col items-center justify-center text-white">
                           <QrCode className="w-24 h-24 text-amber-400" />
@@ -485,7 +579,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     </div>
                     <p className="text-[11px] text-slate-500 flex items-center gap-1">
                       <Lock className="w-3 h-3 text-emerald-600" />
-                      100% RBI Tokenized & Secured. We never store raw card numbers.
+                      100% RBI Tokenized & Secured via Razorpay.
                     </p>
                   </div>
                 )}
@@ -503,7 +597,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <option>HDFC Bank</option>
                       <option>ICICI Bank</option>
                       <option>Axis Bank</option>
-                      <option>Kotak Mahindra Bank</option>
                       <option>Union Bank of India</option>
                       <option>Canara Bank</option>
                       <option>AP Grameena Vikas Bank</option>
@@ -538,7 +631,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <span>Cash on Delivery is available for pincode {selectedAddr.pincode}</span>
                     </div>
                     <p className="text-[11px] text-slate-600">
-                      You can pay via Cash or UPI QR scan at your doorstep when the delivery partner arrives.
+                      Pay via Cash or UPI QR scan at your doorstep when the AP Local Mart delivery partner arrives.
                     </p>
                   </div>
                 )}
@@ -558,10 +651,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   id="confirm-place-order-btn"
                   onClick={handlePlaceOrder}
                   disabled={loading}
-                  className="px-8 py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-black text-sm rounded-xl shadow-lg transition flex items-center gap-2 transform active:scale-98"
+                  className="px-8 py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-black text-sm rounded-xl shadow-lg transition flex items-center gap-2"
                 >
                   <Lock className="w-4 h-4" />
-                  <span>Pay ₹{finalTotal.toLocaleString('en-IN')} & Place Order</span>
+                  <span>
+                    {paymentMethod === 'COD'
+                      ? `Place COD Order (₹${finalTotal.toLocaleString('en-IN')})`
+                      : `Pay ₹${finalTotal.toLocaleString('en-IN')} & Place Order`}
+                  </span>
                 </button>
               </div>
             </div>
@@ -571,8 +668,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           {step === 'processing' && (
             <div className="py-16 text-center space-y-4">
               <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
-              <h4 className="text-lg font-black text-slate-900">Processing Your Payment...</h4>
-              <p className="text-xs text-slate-500">Contacting Indian Banking Gateway. Please do not refresh.</p>
+              <h4 className="text-lg font-black text-slate-900">Verifying Payment & Inventory...</h4>
+              <p className="text-xs text-slate-500">Verifying cryptographic signature with backend server. Please do not refresh.</p>
             </div>
           )}
 
@@ -586,25 +683,29 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               <div>
                 <h4 className="text-2xl font-black text-slate-900 font-serif">Order Confirmed!</h4>
                 <p className="text-xs text-slate-500 mt-1">
-                  Thank you for supporting authentic Andhra artisans & sellers!
+                  Thank you for supporting local Andhra Pradesh farmers, stores & artisans!
                 </p>
                 <div className="mt-3 inline-block px-3 py-1 bg-amber-100 text-amber-900 font-mono font-bold text-xs rounded-lg">
-                  Order ID: {createdOrder.id}
+                  Order Number: {createdOrder.orderNumber || createdOrder.id}
                 </div>
               </div>
 
               <div className="max-w-md mx-auto p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left text-xs space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Payment Status:</span>
+                  <span className="font-bold text-emerald-700">{createdOrder.paymentStatus} ({createdOrder.paymentMethod})</span>
+                </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Estimated Delivery:</span>
                   <span className="font-bold text-emerald-700">{createdOrder.estimatedDelivery}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Courier Partner:</span>
-                  <span className="font-bold text-slate-800">{createdOrder.tracking.courier}</span>
+                  <span className="font-bold text-slate-800">{createdOrder.courierPartner || createdOrder.tracking?.carrier}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">AWB Tracking Number:</span>
-                  <span className="font-mono font-bold text-amber-800">{createdOrder.tracking.trackingNumber}</span>
+                  <span className="font-mono font-bold text-amber-800">{createdOrder.trackingNumber || createdOrder.tracking?.awbNumber}</span>
                 </div>
               </div>
 
@@ -622,7 +723,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 </button>
 
                 <button
-                  onClick={onClose}
+                  onClick={() => {
+                    onClose();
+                    onOrderSuccess(createdOrder);
+                  }}
                   className="w-full sm:w-auto px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
                 >
                   Continue Shopping

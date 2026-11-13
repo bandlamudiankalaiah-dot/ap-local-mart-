@@ -115,8 +115,31 @@ export const INITIAL_CATEGORIES: Category[] = [
     description: 'Araku Valley Arabica organic coffee beans and authentic herbal wellness',
     featured: false,
     order: 7
+  },
+  {
+    id: 'cat-veg-fruits',
+    name: 'Vegetables & Fruits',
+    nameTe: 'కూరగాయలు & పండ్లు (రైతు బజార్)',
+    slug: 'vegetables-fruits',
+    iconName: 'Apple',
+    image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&auto=format&fit=crop&q=80',
+    description: 'Farm-fresh Rythu Bazaar vegetables, Banganapalle mangoes, Palnadu greens & local harvest',
+    featured: true,
+    order: 8
+  },
+  {
+    id: 'cat-dairy-pulses',
+    name: 'Rice, Pulses & Dairy',
+    nameTe: 'బియ్యం, పప్పులు & పాల ఉత్పత్తులు',
+    slug: 'rice-pulses-dairy',
+    iconName: 'Milk',
+    image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&auto=format&fit=crop&q=80',
+    description: 'Godavari aged Sona Masoori rice, Toor Dal, pure Ongole A2 Bilona Ghee & fresh curd',
+    featured: true,
+    order: 9
   }
 ];
+
 
 export const INITIAL_SUBCATEGORIES: Subcategory[] = [
   { id: 'sub-pickles', categoryId: 'cat-sweets-snacks', name: 'Traditional Pickles (పచ్చళ్ళు)', nameTe: 'సంప్రదాయ పచ్చళ్ళు', slug: 'traditional-pickles' },
@@ -680,8 +703,187 @@ export const INITIAL_PRODUCTS: Product[] = [
     status: 'active',
     createdAt: '2025-01-19T06:00:00Z',
     deliveryDays: 1
+  },
+  {
+    id: 'prod-banganapalle-mangoes-3kg',
+    sellerId: 'seller-godavari-heritage',
+    sellerName: 'Godavari Ruchulu & Sweets',
+    categoryId: 'cat-veg-fruits',
+    subcategoryId: 'sub-spices',
+    title: 'GI Tagged Nandyal Banganapalle Farm Fresh Mangoes (3 KG Carbide-Free Box)',
+    titleTe: 'బనగానపల్లె తాజా మామిడి పండ్లు (3 కిలోలు)',
+    slug: 'gi-tagged-banganapalle-mangoes-3kg',
+    description: 'Naturally ripened, fiberless, golden-yellow Banganapalle mangoes harvested straight from Kurnool/Nandyal orchards. 100% carbide-free and sweet.',
+    specifications: [
+      { key: 'Net Weight', value: '3 Kilograms (8-10 Fruits)' },
+      { key: 'Origin', value: 'Banganapalle, Nandyal District, AP' },
+      { key: 'Ripening', value: '100% Natural Hay Ripened (Carbide-Free)' },
+      { key: 'GI Status', value: 'Geographical Indication Certified' }
+    ],
+    brand: 'AP Rythu Bazaar Direct',
+    originalPrice: 650,
+    sellingPrice: 449,
+    discountPercent: 31,
+    stock: 85,
+    inStock: true,
+    rating: 4.9,
+    reviewCount: 215,
+    images: [
+      'https://images.unsplash.com/photo-1553279768-865429fa0078?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: true,
+    isTrending: true,
+    isAndhraSpecial: true,
+    originDistrict: 'Nandyal / Kurnool',
+    tags: ['mangoes', 'fruits', 'banganapalle', 'fresh', 'rythu bazaar'],
+    status: 'active',
+    createdAt: '2025-02-01T08:00:00Z',
+    deliveryDays: 1
+  },
+  {
+    id: 'prod-rythu-veggie-basket',
+    sellerId: 'seller-godavari-heritage',
+    sellerName: 'Godavari Ruchulu & Sweets',
+    categoryId: 'cat-veg-fruits',
+    subcategoryId: 'sub-spices',
+    title: 'Vijayawada Rythu Bazaar Fresh Daily Vegetable Combo Pack (Gongura, Dosakaya, Gutti Vankaya, Okra - 4 KG)',
+    titleTe: 'రైతు బజార్ తాజా కూరగాయల కాంబో ప్యాక్ (4 కిలోలు)',
+    slug: 'vijayawada-rythu-bazaar-fresh-vegetable-combo',
+    description: 'Morning-harvested Andhra kitchen vegetables directly from Krishna delta farmers: fresh Gongura bundles, yellow Dosakaya, tender Gutti Vankaya (brinjal), and farm Bhindi.',
+    specifications: [
+      { key: 'Contents', value: 'Gutti Vankaya (1kg), Dosakaya (1kg), Bhindi (1kg), Tomato (1kg) + Free Gongura & Curry Leaves' },
+      { key: 'Source', value: 'Krishna & Guntur Local Farmers Collective' },
+      { key: 'Delivery', value: 'Same-Day / Next-Morning Express' }
+    ],
+    brand: 'AP Rythu Bazaar Direct',
+    originalPrice: 280,
+    sellingPrice: 199,
+    discountPercent: 29,
+    stock: 120,
+    inStock: true,
+    rating: 4.8,
+    reviewCount: 178,
+    images: [
+      'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: true,
+    isTrending: true,
+    isAndhraSpecial: false,
+    originDistrict: 'NTR / Krishna',
+    tags: ['vegetables', 'fresh', 'gongura', 'vankaya', 'rythu bazaar', 'grocery'],
+    status: 'active',
+    createdAt: '2025-02-02T07:00:00Z',
+    deliveryDays: 1
+  },
+  {
+    id: 'prod-godavari-sona-masoori-25kg',
+    sellerId: 'seller-godavari-heritage',
+    sellerName: 'Godavari Ruchulu & Sweets',
+    categoryId: 'cat-dairy-pulses',
+    subcategoryId: 'sub-rice-oils',
+    title: 'East Godavari Aged 12-Months BPT 5204 Sona Masoori Raw Rice (25 KG Family Pack)',
+    titleTe: 'తూర్పు గోదావరి పాత సోనా మసూరి బియ్యం (25 కిలోల బస్తా)',
+    slug: 'east-godavari-aged-sona-masoori-rice-25kg',
+    description: 'Premium single-origin BPT 5204 Sona Masoori rice cultivated in the fertile Godavari delta and naturally aged for 12 months. Cooks fluffy, aromatic, and light for daily meals.',
+    specifications: [
+      { key: 'Net Weight', value: '25 Kilograms' },
+      { key: 'Grain Variety', value: 'BPT 5204 Fine Sona Masoori (12 Months Aged)' },
+      { key: 'Origin', value: 'Mandapeta & Ramachandrapuram Mills, East Godavari' },
+      { key: 'Polish', value: 'Silky Sortex Cleaned, Unadulterated' }
+    ],
+    brand: 'Godavari Ruchulu',
+    originalPrice: 1850,
+    sellingPrice: 1499,
+    discountPercent: 19,
+    stock: 65,
+    inStock: true,
+    rating: 4.9,
+    reviewCount: 412,
+    images: [
+      'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: true,
+    isTrending: true,
+    isAndhraSpecial: true,
+    originDistrict: 'East Godavari',
+    tags: ['rice', 'sona masoori', 'pulses', 'grocery', 'bpt'],
+    status: 'active',
+    createdAt: '2025-02-03T09:00:00Z',
+    deliveryDays: 1
+  },
+  {
+    id: 'prod-ongole-a2-ghee-1l',
+    sellerId: 'seller-godavari-heritage',
+    sellerName: 'Godavari Ruchulu & Sweets',
+    categoryId: 'cat-dairy-pulses',
+    subcategoryId: 'sub-rice-oils',
+    title: 'Pure Ongole Breed Country Buffalo & Cow Bilona Mudda Neyyi / Pure Ghee (1 Litre Glass Jar)',
+    titleTe: 'ఒంగోలు స్వచ్ఛమైన దేశీ నెయ్యి (1 లీటరు)',
+    slug: 'pure-ongole-bilona-mudda-neyyi-ghee-1l',
+    description: 'Traditional clay-pot curd churned Bilona ghee (Pusa Neyyi) from free-grazing dairy farms in Prakasam & Guntur districts. Rich granular texture and authentic aroma.',
+    specifications: [
+      { key: 'Volume', value: '1000 ml (1 Litre Glass Jar)' },
+      { key: 'Method', value: 'Traditional Curd Churned Bilona Process' },
+      { key: 'Origin', value: 'Ongole, Prakasam District, AP' },
+      { key: 'Purity', value: '100% Preservative-Free Farm Dairy' }
+    ],
+    brand: 'Godavari Ruchulu',
+    originalPrice: 1150,
+    sellingPrice: 899,
+    discountPercent: 22,
+    stock: 75,
+    inStock: true,
+    rating: 4.9,
+    reviewCount: 328,
+    images: [
+      'https://images.unsplash.com/photo-1631451095765-2c91616fc9e6?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: true,
+    isTrending: false,
+    isAndhraSpecial: true,
+    originDistrict: 'Prakasam',
+    tags: ['dairy', 'ghee', 'neyyi', 'ongole', 'milk'],
+    status: 'active',
+    createdAt: '2025-02-04T10:00:00Z',
+    deliveryDays: 1
+  },
+  {
+    id: 'prod-palnadu-toor-dal-2kg',
+    sellerId: 'seller-godavari-heritage',
+    sellerName: 'Godavari Ruchulu & Sweets',
+    categoryId: 'cat-dairy-pulses',
+    subcategoryId: 'sub-rice-oils',
+    title: 'Unpolished Palnadu Red Gram / Kandi Pappu (Toor Dal - 2 KG Value Pack)',
+    titleTe: 'పల్నాడు అన్‌పాలిష్డ్ కందిపప్పు (2 కిలోలు)',
+    slug: 'unpolished-palnadu-kandi-pappu-toor-dal-2kg',
+    description: 'Naturally sun-dried, unpolished Toor Dal (Kandi Pappu) from Palnadu farms. Ideal for authentic Andhra Pappu Charu, Mudda Pappu, and Sambar.',
+    specifications: [
+      { key: 'Net Weight', value: '2 Kilograms' },
+      { key: 'Processing', value: 'Zero Artificial Polish, Zero Oil Coating' },
+      { key: 'Origin', value: 'Narasaraopet, Palnadu District, AP' }
+    ],
+    brand: 'AP Rythu Bazaar Direct',
+    originalPrice: 420,
+    sellingPrice: 339,
+    discountPercent: 19,
+    stock: 150,
+    inStock: true,
+    rating: 4.8,
+    reviewCount: 194,
+    images: [
+      'https://images.unsplash.com/photo-1515543904379-3d757afe72e4?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: false,
+    isTrending: true,
+    isAndhraSpecial: false,
+    originDistrict: 'Palnadu / Guntur',
+    tags: ['pulses', 'dal', 'kandi pappu', 'toor dal', 'grocery'],
+    status: 'active',
+    createdAt: '2025-02-05T11:00:00Z',
+    deliveryDays: 1
   }
 ];
+
 
 export const INITIAL_BANNERS: Banner[] = [
   {

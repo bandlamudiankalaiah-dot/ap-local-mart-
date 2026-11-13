@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { getSocket } from '../../services/socket';
 
 interface OrderHistoryViewProps {
   onSelectProductForReview?: (productId: string) => void;
@@ -32,9 +33,31 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [showCancelPromptId, setShowCancelPromptId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState('Ordered by mistake / Changed mind');
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   useEffect(() => {
     loadOrders();
+    const socket = getSocket();
+    const handleOrderUpdated = (updatedOrder: Order) => {
+      setOrders(prev => prev.map(o => (o.id === updatedOrder.id ? updatedOrder : o)));
+      setActiveOrder(prev => (prev?.id === updatedOrder.id ? updatedOrder : prev));
+    };
+    const handleOrderCreated = (newOrder: Order) => {
+      if (!user?.id || newOrder.userId === user.id) {
+        setOrders(prev => {
+          if (prev.some(o => o.id === newOrder.id)) return prev;
+          return [newOrder, ...prev];
+        });
+      }
+    };
+    socket.on('order:updated', handleOrderUpdated);
+    socket.on('order:created', handleOrderCreated);
+    return () => {
+      socket.off('order:updated', handleOrderUpdated);
+      socket.off('order:created', handleOrderCreated);
+    };
   }, [user?.id]);
 
   const loadOrders = async () => {
@@ -57,19 +80,22 @@ export const OrderHistoryView: React.FC<OrderHistoryViewProps> = ({
   };
 
   const handleCancelOrder = async (orderId: string) => {
-    const reason = prompt('Please enter cancellation reason (e.g. Changed mind, Ordered by mistake):');
-    if (!reason) return;
+    if (!cancelReason.trim()) return;
     setCancellingId(orderId);
     try {
-      const res = await api.cancelOrder(orderId, reason);
+      const res = await api.cancelOrder(orderId, cancelReason.trim());
       if (res.success && res.order) {
         setOrders(prev => prev.map(o => (o.id === orderId ? res.order : o)));
         if (activeOrder?.id === orderId) {
           setActiveOrder(res.order);
         }
+        setShowCancelPromptId(null);
+        setStatusMessage('Order cancelled and stock restored.');
+        setTimeout(() => setStatusMessage(null), 4000);
       }
     } catch {
-      alert('Failed to cancel order');
+      setStatusMessage('Failed to cancel order.');
+      setTimeout(() => setStatusMessage(null), 4000);
     }
     setCancellingId(null);
   };
@@ -371,14 +397,46 @@ Thank you for shopping on AndhraMart!
 
                         {/* Cancel Action */}
                         {activeStatus !== 'DELIVERED' && activeStatus !== 'CANCELLED' && activeStatus !== 'RETURNED' && activeStatus !== 'REFUNDED' && (
-                          <button
-                            onClick={() => handleCancelOrder(activeOrder.id)}
-                            disabled={cancellingId === activeOrder.id}
-                            className="w-full py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold rounded-xl transition flex items-center justify-center gap-1.5"
-                          >
-                            <XCircle className="w-3.5 h-3.5" />
-                            <span>{cancellingId === activeOrder.id ? 'Cancelling...' : 'Cancel Order'}</span>
-                          </button>
+                          showCancelPromptId === activeOrder.id ? (
+                            <div className="p-2.5 bg-red-50 border border-red-200 rounded-xl space-y-2">
+                              <label className="block text-[10px] font-bold text-red-800 uppercase">Cancellation Reason</label>
+                              <input
+                                type="text"
+                                value={cancelReason}
+                                onChange={e => setCancelReason(e.target.value)}
+                                className="w-full px-2.5 py-1.5 bg-white border border-red-200 rounded-lg text-xs"
+                                placeholder="Reason for cancelling..."
+                              />
+                              <div className="flex gap-1.5">
+                                <button
+                                  onClick={() => handleCancelOrder(activeOrder.id)}
+                                  disabled={cancellingId === activeOrder.id}
+                                  className="flex-1 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-[11px]"
+                                >
+                                  {cancellingId === activeOrder.id ? 'Cancelling...' : 'Confirm Cancel'}
+                                </button>
+                                <button
+                                  onClick={() => setShowCancelPromptId(null)}
+                                  className="px-2.5 py-1.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-lg text-[11px]"
+                                >
+                                  Back
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setShowCancelPromptId(activeOrder.id)}
+                              className="w-full py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold rounded-xl transition flex items-center justify-center gap-1.5"
+                            >
+                              <XCircle className="w-3.5 h-3.5" />
+                              <span>Cancel Order</span>
+                            </button>
+                          )
+                        )}
+                        {statusMessage && (
+                          <p className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 rounded-lg text-center">
+                            {statusMessage}
+                          </p>
                         )}
                       </div>
                     </div>
