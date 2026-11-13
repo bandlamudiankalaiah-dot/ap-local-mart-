@@ -1,0 +1,979 @@
+import {
+  Category,
+  Subcategory,
+  Product,
+  User,
+  Seller,
+  Order,
+  Coupon,
+  Banner,
+  PincodeInfo,
+  AppNotification,
+  Review
+} from '../types';
+
+export const AP_PINCODES: Record<string, PincodeInfo> = {
+  '520001': { pincode: '520001', city: 'Vijayawada', district: 'NTR / Krishna', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 1, codAvailable: true, expressAvailable: true },
+  '520002': { pincode: '520002', city: 'Vijayawada Governorpet', district: 'NTR', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 1, codAvailable: true, expressAvailable: true },
+  '530001': { pincode: '530001', city: 'Visakhapatnam Beach Road', district: 'Visakhapatnam', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 1, codAvailable: true, expressAvailable: true },
+  '530017': { pincode: '530017', city: 'MVP Colony, Visakhapatnam', district: 'Visakhapatnam', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 1, codAvailable: true, expressAvailable: true },
+  '522001': { pincode: '522001', city: 'Guntur Main', district: 'Guntur', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 1, codAvailable: true, expressAvailable: true },
+  '517501': { pincode: '517501', city: 'Tirupati Central', district: 'Tirupati', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 2, codAvailable: true, expressAvailable: true },
+  '533101': { pincode: '533101', city: 'Rajahmundry', district: 'East Godavari', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 2, codAvailable: true, expressAvailable: true },
+  '533001': { pincode: '533001', city: 'Kakinada', district: 'Kakinada', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 2, codAvailable: true, expressAvailable: true },
+  '524001': { pincode: '524001', city: 'Nellore', district: 'SPSR Nellore', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 2, codAvailable: true, expressAvailable: true },
+  '518001': { pincode: '518001', city: 'Kurnool', district: 'Kurnool', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 2, codAvailable: true, expressAvailable: true },
+  '516001': { pincode: '516001', city: 'Kadapa (Cuddapah)', district: 'YSR Kadapa', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 2, codAvailable: true, expressAvailable: true },
+  '515001': { pincode: '515001', city: 'Anantapur', district: 'Anantapur', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 2, codAvailable: true, expressAvailable: true },
+  '532001': { pincode: '532001', city: 'Srikakulam', district: 'Srikakulam', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 3, codAvailable: true, expressAvailable: true },
+  '535001': { pincode: '535001', city: 'Vizianagaram', district: 'Vizianagaram', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 2, codAvailable: true, expressAvailable: true },
+  '523001': { pincode: '523001', city: 'Ongole', district: 'Prakasam', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 2, codAvailable: true, expressAvailable: true },
+  '534001': { pincode: '534001', city: 'Eluru', district: 'Eluru', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 2, codAvailable: true, expressAvailable: true },
+  '517001': { pincode: '517001', city: 'Chittoor', district: 'Chittoor', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 2, codAvailable: true, expressAvailable: true },
+  '531149': { pincode: '531149', city: 'Araku Valley', district: 'Alluri Sitharama Raju', state: 'Andhra Pradesh', isDeliverable: true, estimatedDays: 3, codAvailable: true, expressAvailable: false },
+  '500001': { pincode: '500001', city: 'Hyderabad', district: 'Hyderabad', state: 'Telangana', isDeliverable: true, estimatedDays: 2, codAvailable: true, expressAvailable: true },
+  '560001': { pincode: '560001', city: 'Bengaluru', district: 'Bengaluru Urban', state: 'Karnataka', isDeliverable: true, estimatedDays: 3, codAvailable: true, expressAvailable: true },
+  '600001': { pincode: '600001', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', isDeliverable: true, estimatedDays: 3, codAvailable: true, expressAvailable: true },
+  '110001': { pincode: '110001', city: 'New Delhi', district: 'Central Delhi', state: 'Delhi', isDeliverable: true, estimatedDays: 4, codAvailable: true, expressAvailable: false },
+  '400001': { pincode: '400001', city: 'Mumbai', district: 'Mumbai', state: 'Maharashtra', isDeliverable: true, estimatedDays: 4, codAvailable: true, expressAvailable: false }
+};
+
+export const INITIAL_CATEGORIES: Category[] = [
+  {
+    id: 'cat-ap-special',
+    name: 'Andhra Specials & Crafts',
+    nameTe: 'ఆంధ్ర విశేషాలు & చేతివృత్తులు',
+    slug: 'andhra-specials',
+    iconName: 'Sparkles',
+    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop&q=80',
+    description: 'Authentic GI tagged delicacies, pickles, sweets, and heritage crafts of Andhra Pradesh',
+    featured: true,
+    order: 1
+  },
+  {
+    id: 'cat-handlooms',
+    name: 'Handlooms & Sarees',
+    nameTe: 'చేనేత వస్త్రాలు & చీరలు',
+    slug: 'handlooms-sarees',
+    iconName: 'Shirt',
+    image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=600&auto=format&fit=crop&q=80',
+    description: 'Dharmavaram, Uppada, Mangalagiri, and Venkatagiri pure silk & cotton handlooms',
+    featured: true,
+    order: 2
+  },
+  {
+    id: 'cat-groceries',
+    name: 'Spices & Groceries',
+    nameTe: 'మసాలాలు & నిత్యావసరాలు',
+    slug: 'spices-groceries',
+    iconName: 'ShoppingBasket',
+    image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600&auto=format&fit=crop&q=80',
+    description: 'Guntur Teja chilis, organic spices, Sona Masoori rice, cold-pressed oils',
+    featured: true,
+    order: 3
+  },
+  {
+    id: 'cat-sweets-snacks',
+    name: 'Sweets & Pickles',
+    nameTe: 'మిఠాయిలు & పచ్చళ్ళు',
+    slug: 'sweets-pickles',
+    iconName: 'Cookie',
+    image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80',
+    description: 'Atreyapuram Pootharekulu, Bandar Laddu, Kakinada Kaja, Gongura & Avakaya',
+    featured: true,
+    order: 4
+  },
+  {
+    id: 'cat-electronics',
+    name: 'Electronics & Mobiles',
+    nameTe: 'ఎలక్ట్రానిక్స్ & మొబైల్స్',
+    slug: 'electronics',
+    iconName: 'Smartphone',
+    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&auto=format&fit=crop&q=80',
+    description: 'Smartphones, smartwatches, audio devices, laptops, and home appliances',
+    featured: true,
+    order: 5
+  },
+  {
+    id: 'cat-home-kitchen',
+    name: 'Home & Kitchen',
+    nameTe: 'ఇల్లు & వంటగది',
+    slug: 'home-kitchen',
+    iconName: 'Home',
+    image: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=600&auto=format&fit=crop&q=80',
+    description: 'Traditional brass cookware, wet grinders, kitchen tools, and regional home decor',
+    featured: true,
+    order: 6
+  },
+  {
+    id: 'cat-wellness',
+    name: 'Ayurveda & Coffee',
+    nameTe: 'ఆయుర్వేదం & కాఫీ',
+    slug: 'ayurveda-coffee',
+    iconName: 'HeartPulse',
+    image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80',
+    description: 'Araku Valley Arabica organic coffee beans and authentic herbal wellness',
+    featured: false,
+    order: 7
+  }
+];
+
+export const INITIAL_SUBCATEGORIES: Subcategory[] = [
+  { id: 'sub-pickles', categoryId: 'cat-sweets-snacks', name: 'Traditional Pickles (పచ్చళ్ళు)', nameTe: 'సంప్రదాయ పచ్చళ్ళు', slug: 'traditional-pickles' },
+  { id: 'sub-pootharekulu', categoryId: 'cat-sweets-snacks', name: 'Pootharekulu & Halwas', nameTe: 'పూతరేకులు & హల్వాలు', slug: 'pootharekulu' },
+  { id: 'sub-sarees-silk', categoryId: 'cat-handlooms', name: 'Silk Sarees (పట్టు చీరలు)', nameTe: 'పట్టు చీరలు', slug: 'silk-sarees' },
+  { id: 'sub-sarees-cotton', categoryId: 'cat-handlooms', name: 'Mangalagiri & Cotton', nameTe: 'మంగళగిరి కాటన్', slug: 'cotton-sarees' },
+  { id: 'sub-toys', categoryId: 'cat-ap-special', name: 'Kondapalli & Etikoppaka Toys', nameTe: 'కొండపల్లి & ఏటికొప్పాక బొమ్మలు', slug: 'wooden-toys' },
+  { id: 'sub-spices', categoryId: 'cat-groceries', name: 'Guntur Chilis & Spices', nameTe: 'గుంటూరు మిర్చి & మసాలాలు', slug: 'guntur-spices' },
+  { id: 'sub-rice-grains', categoryId: 'cat-groceries', name: 'Andhra Sona Masoori Rice', nameTe: 'సోనా మసూరి బియ్యం', slug: 'rice-grains' },
+  { id: 'sub-araku-coffee', categoryId: 'cat-wellness', name: 'Araku Valley Special Coffee', nameTe: 'అరకు వ్యాలీ కాఫీ', slug: 'araku-coffee' },
+  { id: 'sub-smartphones', categoryId: 'cat-electronics', name: '5G Smartphones', nameTe: 'స్మార్ట్‌ఫోన్‌లు', slug: 'smartphones' },
+  { id: 'sub-audio', categoryId: 'cat-electronics', name: 'TWS Earbuds & Speakers', nameTe: 'ఇయర్‌బడ్స్ & స్పీకర్లు', slug: 'earbuds-speakers' },
+  { id: 'sub-brassware', categoryId: 'cat-home-kitchen', name: 'Heritage Brass & Bell Metal', nameTe: 'ఇత్తడి పాత్రలు', slug: 'brass-cookware' }
+];
+
+export const INITIAL_SELLERS: Seller[] = [
+  {
+    id: 'seller-godavari-heritage',
+    userId: 'user-seller-1',
+    storeName: 'Godavari Ruchulu & Sweets',
+    storeSlug: 'godavari-ruchulu',
+    description: 'Generations-old recipes of homemade Avakaya pickles, Ghee Pootharekulu, and Godavari delta snacks directly from Rajahmundry & Atreyapuram.',
+    logo: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=200&auto=format&fit=crop&q=80',
+    rating: 4.8,
+    totalSales: 4580,
+    totalOrders: 3200,
+    isKycVerified: true,
+    businessType: 'PROPRIETORSHIP',
+    gstNumber: '37AAAAA0000A1Z5',
+    panNumber: 'ABCDE1234F',
+    bankAccount: '918010045882910',
+    bankIfsc: 'SBIN0001234',
+    pickupPincode: '533101',
+    pickupDistrict: 'East Godavari',
+    pickupAddress: 'Door 14-2-12, Main Bazaar, Rajahmundry',
+    phone: '+91 98480 12345',
+    email: 'godavari.ruchulu@andhramart.in',
+    status: 'active',
+    createdAt: '2025-01-10T10:00:00Z'
+  },
+  {
+    id: 'seller-dharmavaram-weavers',
+    userId: 'user-seller-2',
+    storeName: 'Dharmavaram Silk Heritage Society',
+    storeSlug: 'dharmavaram-silks',
+    description: 'Master weavers cooperative producing GI certified Dharmavaram & Mangalagiri pure Zari bridal silk sarees.',
+    logo: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=200&auto=format&fit=crop&q=80',
+    rating: 4.9,
+    totalSales: 3120,
+    totalOrders: 1890,
+    isKycVerified: true,
+    businessType: 'INDIVIDUAL',
+    gstNumber: '37BBBBB1111B2Z8',
+    panNumber: 'BCDEF2345G',
+    bankAccount: '50100239912044',
+    bankIfsc: 'HDFC0000456',
+    pickupPincode: '515671',
+    pickupDistrict: 'Sri Sathya Sai / Anantapur',
+    pickupAddress: 'Plot 45, Handloom Weavers Colony, Dharmavaram',
+    phone: '+91 94401 54321',
+    email: 'dharmavaram.weavers@andhramart.in',
+    status: 'active',
+    createdAt: '2025-02-01T11:00:00Z'
+  },
+  {
+    id: 'seller-guntur-spice-traders',
+    userId: 'user-seller-3',
+    storeName: 'Guntur Mirchi & Spices Hub',
+    storeSlug: 'guntur-mirchi-hub',
+    description: 'Direct from Asia’s largest chili yard in Guntur. Premium Teja stemless red chili, turmeric powder, and cold-pressed sesame oil.',
+    logo: 'https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=200&auto=format&fit=crop&q=80',
+    rating: 4.7,
+    totalSales: 7800,
+    totalOrders: 5400,
+    isKycVerified: true,
+    businessType: 'PVT_LTD',
+    gstNumber: '37CCCCC2222C3Z1',
+    panNumber: 'CDEFG3456H',
+    bankAccount: '003405001290',
+    bankIfsc: 'ICIC0000034',
+    pickupPincode: '522001',
+    pickupDistrict: 'Guntur',
+    pickupAddress: 'Shop 118, Market Yard, Guntur',
+    phone: '+91 99890 98765',
+    email: 'guntur.spices@andhramart.in',
+    status: 'active',
+    createdAt: '2025-01-15T09:00:00Z'
+  },
+  {
+    id: 'seller-vizag-tech-zone',
+    userId: 'user-seller-4',
+    storeName: 'Vizag Digital & Mobiles Direct',
+    storeSlug: 'vizag-digital-zone',
+    description: 'Authorized retailer for electronics, 5G smartphones, power banks, and appliances with same-day express delivery across AP.',
+    logo: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=200&auto=format&fit=crop&q=80',
+    rating: 4.6,
+    totalSales: 8900,
+    totalOrders: 4200,
+    isKycVerified: true,
+    businessType: 'PVT_LTD',
+    gstNumber: '37DDDDD3333D4Z4',
+    panNumber: 'DEFGH4567J',
+    bankAccount: '329011928374',
+    bankIfsc: 'SBIN0004500',
+    pickupPincode: '530001',
+    pickupDistrict: 'Visakhapatnam',
+    pickupAddress: 'Dabagardens Tech Complex, Visakhapatnam',
+    phone: '+91 89125 67890',
+    email: 'vizag.digital@andhramart.in',
+    status: 'active',
+    createdAt: '2025-01-20T14:30:00Z'
+  }
+];
+
+export const INITIAL_PRODUCTS: Product[] = [
+  {
+    id: 'prod-avakaya-pickle-1kg',
+    sellerId: 'seller-godavari-heritage',
+    sellerName: 'Godavari Ruchulu & Sweets',
+    categoryId: 'cat-sweets-snacks',
+    subcategoryId: 'sub-pickles',
+    title: 'Authentic Andhra Godavari Special Bellam Avakaya Pickle (1 KG Jar)',
+    titleTe: 'గోదావరి సంప్రదాయ బెల్లం ఆవకాయ పచ్చడి (1 కేజీ)',
+    slug: 'andhra-godavari-bellam-avakaya-pickle-1kg',
+    description: 'Handcrafted traditional mango pickle made using raw country mangoes, cold-pressed sesame oil, Guntur red chili powder, mustard seeds, and pure organic jaggery. Matured naturally under Godavari sun without artificial preservatives.',
+    specifications: [
+      { key: 'Weight', value: '1 Kilogram (1000g)' },
+      { key: 'Ingredients', value: 'Raw Mango Pieces, Pure Sesame Oil, Guntur Red Chili, Mustard Seeds, Jaggery, Fenugreek, Rock Salt' },
+      { key: 'Shelf Life', value: '12 Months' },
+      { key: 'Diet Type', value: '100% Vegetarian, Preservative-Free' },
+      { key: 'Origin', value: 'Rajahmundry, East Godavari, AP' }
+    ],
+    brand: 'Godavari Ruchulu',
+    originalPrice: 599,
+    sellingPrice: 429,
+    discountPercent: 28,
+    stock: 85,
+    inStock: true,
+    rating: 4.9,
+    reviewCount: 412,
+    images: [
+      'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: true,
+    isTrending: true,
+    isAndhraSpecial: true,
+    originDistrict: 'East Godavari',
+    tags: ['avakaya', 'pickle', 'mango pickle', 'andhra ruchulu', 'godavari', 'spicy'],
+    status: 'active',
+    createdAt: '2025-01-12T08:00:00Z',
+    deliveryDays: 1
+  },
+  {
+    id: 'prod-pootharekulu-dryfruit-box',
+    sellerId: 'seller-godavari-heritage',
+    sellerName: 'Godavari Ruchulu & Sweets',
+    categoryId: 'cat-sweets-snacks',
+    subcategoryId: 'sub-pootharekulu',
+    title: 'Atreyapuram Special Pure Ghee & Dry Fruit Pootharekulu (Pack of 15 Rolls)',
+    titleTe: 'ఆత్రేయపురం ప్రత్యేక నేతి డ్రై ఫ్రూట్ పూతరేకులు (15 రోల్స్)',
+    slug: 'atreyapuram-ghee-dryfruit-pootharekulu-15-pack',
+    description: 'The world-renowned GI tagged paper-thin rice wafers stuffed with grated cashew nuts, almonds, pure desi cow ghee, and fine cane sugar powder. Rolled fresh in Atreyapuram village.',
+    specifications: [
+      { key: 'Quantity', value: '15 Hand-rolled Sheets' },
+      { key: 'Key Ingredients', value: 'Rice Starch Wafers, Desi Cow Ghee, Cashews, Almonds, Organic Cardamom' },
+      { key: 'GI Tagged', value: 'Yes - Atreyapuram GI Authenticated' },
+      { key: 'Packaging', value: 'Airtight Gift Box with Moisture Barrier' }
+    ],
+    brand: 'Godavari Ruchulu',
+    originalPrice: 650,
+    sellingPrice: 489,
+    discountPercent: 24,
+    stock: 45,
+    inStock: true,
+    rating: 4.9,
+    reviewCount: 320,
+    images: [
+      'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: true,
+    isTrending: true,
+    isAndhraSpecial: true,
+    originDistrict: 'East Godavari',
+    tags: ['pootharekulu', 'atreyapuram', 'sweets', 'ghee', 'andhra mithai'],
+    status: 'active',
+    createdAt: '2025-01-14T10:00:00Z',
+    deliveryDays: 1
+  },
+  {
+    id: 'prod-dharmavaram-silk-saree-red',
+    sellerId: 'seller-dharmavaram-weavers',
+    sellerName: 'Dharmavaram Silk Heritage Society',
+    categoryId: 'cat-handlooms',
+    subcategoryId: 'sub-sarees-silk',
+    title: 'Dharmavaram Pure Handloom Silk Wedding Saree with Rich Gold Zari Pallu (Crimson Red)',
+    titleTe: 'ధర్మవరం ప్యూర్ చేనేత పట్టు చీర - బంగారు జరీ పల్లూ (ఎరుపు)',
+    slug: 'dharmavaram-pure-handloom-silk-saree-crimson',
+    description: 'Exquisite authentic handloom silk saree handcrafted on traditional pit looms in Dharmavaram. Featuring a grand contrasting temple border with peacock and floral motifs in pure zari.',
+    specifications: [
+      { key: 'Material', value: '100% Pure Mulberry Silk & Fine Gold Zari' },
+      { key: 'Length', value: '6.3 Meters (Includes 80cm matching blouse piece)' },
+      { key: 'Weave Type', value: 'Traditional Dharmavaram Interlocked Pitloom' },
+      { key: 'Silk Mark Certified', value: 'Yes (100% Authentic Silk Mark)' },
+      { key: 'Care', value: 'Dry Clean Only' }
+    ],
+    brand: 'Dharmavaram Weavers',
+    originalPrice: 14999,
+    sellingPrice: 8499,
+    discountPercent: 43,
+    stock: 12,
+    inStock: true,
+    rating: 4.9,
+    reviewCount: 184,
+    images: [
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: true,
+    isTrending: false,
+    isAndhraSpecial: true,
+    originDistrict: 'Sri Sathya Sai',
+    tags: ['saree', 'silk saree', 'dharmavaram', 'wedding', 'pattu cheera', 'handloom'],
+    status: 'active',
+    createdAt: '2025-01-05T12:00:00Z',
+    deliveryDays: 2
+  },
+  {
+    id: 'prod-mangalagiri-cotton-suit',
+    sellerId: 'seller-dharmavaram-weavers',
+    sellerName: 'Dharmavaram Silk Heritage Society',
+    categoryId: 'cat-handlooms',
+    subcategoryId: 'sub-sarees-cotton',
+    title: 'Mangalagiri Pure Cotton Saree with Nizam Gold Zari Border (Peacock Green)',
+    titleTe: 'మంగళగిరి ప్యూర్ కాటన్ చీర - నిజాం జరీ అంచు (నెమలి పచ్చ)',
+    slug: 'mangalagiri-pure-cotton-saree-nizam-border',
+    description: 'Breathable, lightweight 80s count combed cotton saree from the holy foothills of Mangalagiri. Woven with the iconic Nizam Zari border and rich tassel finish.',
+    specifications: [
+      { key: 'Fabric', value: '80s Count Pure Combed Cotton' },
+      { key: 'Border', value: 'Nizam Gold Zari Border' },
+      { key: 'Length', value: '5.5 Meters Saree + 0.8 M Blouse' },
+      { key: 'Occasion', value: 'Daily Elegance, Festive & Office Wear' }
+    ],
+    brand: 'Mangalagiri Crafts',
+    originalPrice: 2499,
+    sellingPrice: 1699,
+    discountPercent: 32,
+    stock: 28,
+    inStock: true,
+    rating: 4.8,
+    reviewCount: 96,
+    images: [
+      'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: false,
+    isTrending: true,
+    isAndhraSpecial: true,
+    originDistrict: 'Guntur',
+    tags: ['mangalagiri', 'cotton saree', 'handloom', 'guntur', 'ethnic wear'],
+    status: 'active',
+    createdAt: '2025-01-22T14:00:00Z',
+    deliveryDays: 1
+  },
+  {
+    id: 'prod-kondapalli-dancing-doll',
+    sellerId: 'seller-godavari-heritage',
+    sellerName: 'Godavari Ruchulu & Sweets',
+    categoryId: 'cat-ap-special',
+    subcategoryId: 'sub-toys',
+    title: 'GI Certified Kondapalli Dancing Doll (Aata Bomma) - Hand-carved Poniki Wood',
+    titleTe: 'కొండపల్లి నృత్య బొమ్మ (ఆట బొమ్మ) - పొనికి చెక్క బొమ్మ',
+    slug: 'kondapalli-dancing-doll-aata-bomma',
+    description: 'Traditional heritage bobblehead dancing doll hand-carved in Kondapalli village near Vijayawada. Crafted using light Poniki wood and painted with vibrant non-toxic natural oil paints.',
+    specifications: [
+      { key: 'Material', value: 'Poniki Wood (Softwood) & Natural Pigments' },
+      { key: 'Height', value: '10 Inches (25 cm)' },
+      { key: 'Mechanism', value: 'Counter-weighted 4-part rhythmic oscillating doll' },
+      { key: 'GI Tag', value: 'Authenticated Kondapalli Craft' }
+    ],
+    brand: 'Kondapalli Artisans',
+    originalPrice: 1299,
+    sellingPrice: 799,
+    discountPercent: 38,
+    stock: 35,
+    inStock: true,
+    rating: 4.9,
+    reviewCount: 145,
+    images: [
+      'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: true,
+    isTrending: true,
+    isAndhraSpecial: true,
+    originDistrict: 'NTR / Krishna',
+    tags: ['kondapalli', 'toys', 'handicrafts', 'bommalu', 'ap craft'],
+    status: 'active',
+    createdAt: '2025-01-18T10:00:00Z',
+    deliveryDays: 1
+  },
+  {
+    id: 'prod-araku-arabica-coffee-500g',
+    sellerId: 'seller-godavari-heritage',
+    sellerName: 'Godavari Ruchulu & Sweets',
+    categoryId: 'cat-wellness',
+    subcategoryId: 'sub-araku-coffee',
+    title: 'Araku Valley 100% Organic Shade-Grown Arabica Filter Coffee Beans (Medium Roast, 500g)',
+    titleTe: 'అరకు లోయ ఆర్గానిక్ అరేబికా కాఫీ గింజలు (500 గ్రాములు)',
+    slug: 'araku-valley-organic-arabica-coffee-500g',
+    description: 'Award-winning single-origin Arabica coffee grown in the Eastern Ghats tribal highlands of Araku Valley at 1200m altitude. Smooth notes of citrus, dark chocolate, and spicy aromatic finish.',
+    specifications: [
+      { key: 'Roast Level', value: 'Medium Dark Roast' },
+      { key: 'Variety', value: '100% Plantation Arabica' },
+      { key: 'Net Weight', value: '500 Grams' },
+      { key: 'Altitude', value: '1,200 Meters above sea level' },
+      { key: 'Farming', value: '100% Chemical-free Organic Tribal Co-op' }
+    ],
+    brand: 'Araku Highlands',
+    originalPrice: 699,
+    sellingPrice: 499,
+    discountPercent: 28,
+    stock: 90,
+    inStock: true,
+    rating: 4.8,
+    reviewCount: 230,
+    images: [
+      'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: false,
+    isTrending: true,
+    isAndhraSpecial: true,
+    originDistrict: 'Alluri Sitharama Raju',
+    tags: ['coffee', 'araku coffee', 'arabica', 'organic', 'tribal coffee', 'filter coffee'],
+    status: 'active',
+    createdAt: '2025-01-25T09:00:00Z',
+    deliveryDays: 2
+  },
+  {
+    id: 'prod-guntur-teja-chili-1kg',
+    sellerId: 'seller-guntur-spice-traders',
+    sellerName: 'Guntur Mirchi & Spices Hub',
+    categoryId: 'cat-groceries',
+    subcategoryId: 'sub-spices',
+    title: 'Guntur Teja (S17) Premium Stemless Sun-Dried Red Chili (1 KG Pack)',
+    titleTe: 'గుంటూరు తేజా ఎర్ర ఎండు మిరపకాయలు (1 కేజీ)',
+    slug: 'guntur-teja-stemless-sun-dried-red-chili-1kg',
+    description: 'The world-famous high pungency Guntur S17 Teja red chili. Hand-sorted, stemless, intensely spicy, with a deep natural red color value (SHU: 75,000+). Direct from Guntur market yards.',
+    specifications: [
+      { key: 'Grade', value: 'Grade A Stemless Teja (S17)' },
+      { key: 'Heat Level', value: 'Extra Hot & Spicy' },
+      { key: 'Moisture', value: 'Below 10% (Sun-Dried)' },
+      { key: 'Packaging', value: 'Vacuum Sealed Moisture-Lock Pack' }
+    ],
+    brand: 'Guntur Mirchi Hub',
+    originalPrice: 480,
+    sellingPrice: 349,
+    discountPercent: 27,
+    stock: 150,
+    inStock: true,
+    rating: 4.8,
+    reviewCount: 310,
+    images: [
+      'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: true,
+    isTrending: false,
+    isAndhraSpecial: true,
+    originDistrict: 'Guntur',
+    tags: ['guntur mirchi', 'red chili', 'spices', 'guntur teja', 'cooking'],
+    status: 'active',
+    createdAt: '2025-01-08T07:00:00Z',
+    deliveryDays: 1
+  },
+  {
+    id: 'prod-andhra-sona-masoori-25kg',
+    sellerId: 'seller-guntur-spice-traders',
+    sellerName: 'Guntur Mirchi & Spices Hub',
+    categoryId: 'cat-groceries',
+    subcategoryId: 'sub-rice-grains',
+    title: 'Kurnool Aged Royal Sona Masoori Raw Rice (18 Months Old, 25 KG Bag)',
+    titleTe: 'కర్నూలు పాత సోనా మసూరి బియ్యం (25 కేజీ బ్యాగ్)',
+    slug: 'kurnool-aged-sona-masoori-rice-25kg',
+    description: 'Premium light, aromatic, and easy-to-digest Sona Masoori rice cultivated in the Tungabhadra basin of Kurnool. Naturally aged for 18+ months for fluffy non-sticky grains.',
+    specifications: [
+      { key: 'Grain Age', value: '18 Months Naturally Aged' },
+      { key: 'Weight', value: '25 Kilograms' },
+      { key: 'Grain Length', value: 'Medium Slender Rice' },
+      { key: 'Origin', value: 'Kurnool District, Andhra Pradesh' }
+    ],
+    brand: 'Kurnool Royal Rice',
+    originalPrice: 1850,
+    sellingPrice: 1449,
+    discountPercent: 21,
+    stock: 60,
+    inStock: true,
+    rating: 4.7,
+    reviewCount: 189,
+    images: [
+      'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: true,
+    isTrending: false,
+    isAndhraSpecial: true,
+    originDistrict: 'Kurnool',
+    tags: ['rice', 'sona masoori', 'kurnool rice', 'grains', 'groceries'],
+    status: 'active',
+    createdAt: '2025-01-16T11:00:00Z',
+    deliveryDays: 2
+  },
+  {
+    id: 'prod-smart-phone-5g-pro',
+    sellerId: 'seller-vizag-tech-zone',
+    sellerName: 'Vizag Digital & Mobiles Direct',
+    categoryId: 'cat-electronics',
+    subcategoryId: 'sub-smartphones',
+    title: 'Nova Apex 5G (8GB RAM, 256GB Storage, 108MP OIS Camera, 67W Turbo Charge)',
+    titleTe: 'నోవా ఎపెక్స్ 5G స్మార్ట్‌ఫోన్ (8GB ర్యామ్, 256GB స్టోరేజ్)',
+    slug: 'nova-apex-5g-smartphone-256gb',
+    description: 'Flagship speed powered by Dimensity 7200 Ultra octa-core processor. Stunning 6.78-inch 120Hz curved AMOLED display, 108MP Sony sensor with Night Vision, 5000mAh battery with 67W charger in-box.',
+    specifications: [
+      { key: 'Processor', value: 'MediaTek Dimensity 7200 Ultra 5G' },
+      { key: 'Display', value: '6.78" FHD+ Curved 120Hz AMOLED, HDR10+' },
+      { key: 'Camera', value: '108MP Primary (OIS) + 8MP Ultrawide + 32MP Selfie' },
+      { key: 'Battery', value: '5000 mAh with 67W SuperFlash Charging' },
+      { key: 'Warranty', value: '1 Year Brand Domestic Warranty across AP Centers' }
+    ],
+    brand: 'NovaTech',
+    originalPrice: 24999,
+    sellingPrice: 18999,
+    discountPercent: 24,
+    stock: 22,
+    inStock: true,
+    rating: 4.6,
+    reviewCount: 540,
+    images: [
+      'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: true,
+    isTrending: true,
+    isAndhraSpecial: false,
+    originDistrict: 'Visakhapatnam',
+    tags: ['mobile', 'smartphone', '5g', 'electronics', 'phone'],
+    status: 'active',
+    createdAt: '2025-01-28T09:00:00Z',
+    deliveryDays: 1
+  },
+  {
+    id: 'prod-tws-anc-earbuds',
+    sellerId: 'seller-vizag-tech-zone',
+    sellerName: 'Vizag Digital & Mobiles Direct',
+    categoryId: 'cat-electronics',
+    subcategoryId: 'sub-audio',
+    title: 'SoundPulse Elite True Wireless Earbuds with 40dB Hybrid ANC & 50Hr Playtime',
+    titleTe: 'సౌండ్‌పల్స్ ఎలైట్ ట్రూ వైర్‌లెస్ ఇయర్‌బడ్స్ (40dB ANC)',
+    slug: 'soundpulse-elite-anc-tws-earbuds',
+    description: 'High-res audio certified 12mm titanium drivers with active noise cancellation, quad-mic ENC for crystal-clear calls on Telugu and Hindi dialects, ultra-low 38ms latency for gaming.',
+    specifications: [
+      { key: 'ANC Depth', value: 'Up to 40dB Hybrid Active Noise Cancellation' },
+      { key: 'Battery Life', value: '10 Hours on single charge, 50 Hours with case' },
+      { key: 'Water Resistance', value: 'IPX5 Sweat and Splash Proof' },
+      { key: 'Bluetooth', value: 'Bluetooth 5.4 with Fast Pair' }
+    ],
+    brand: 'SoundPulse',
+    originalPrice: 4999,
+    sellingPrice: 1999,
+    discountPercent: 60,
+    stock: 45,
+    inStock: true,
+    rating: 4.5,
+    reviewCount: 380,
+    images: [
+      'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: false,
+    isTrending: true,
+    isAndhraSpecial: false,
+    originDistrict: 'Visakhapatnam',
+    tags: ['audio', 'earbuds', 'tws', 'bluetooth', 'anc', 'headphones'],
+    status: 'active',
+    createdAt: '2025-01-26T15:00:00Z',
+    deliveryDays: 1
+  },
+  {
+    id: 'prod-traditional-brass-urli',
+    sellerId: 'seller-godavari-heritage',
+    sellerName: 'Godavari Ruchulu & Sweets',
+    categoryId: 'cat-home-kitchen',
+    subcategoryId: 'sub-brassware',
+    title: 'Handmade Pure Brass Royal Peacock Urli Bowl for Festive Floating Flowers & Diyas',
+    titleTe: 'చేతితో తయారు చేసిన ఇత్తడి పీకాక్ ఉర్లీ బౌల్',
+    slug: 'handmade-pure-brass-peacock-urli-bowl',
+    description: 'Heirloom quality solid brass urli bowl handcrafted by traditional metalsmiths. Perfect for welcoming entrances, Ugadi/Diwali floral arrangements, and pooja rooms.',
+    specifications: [
+      { key: 'Material', value: '100% Solid Heavy Brass' },
+      { key: 'Diameter', value: '12 Inches (30 cm)' },
+      { key: 'Weight', value: '2.4 Kilograms' },
+      { key: 'Finish', value: 'Glossy Gold Mirror Finish with Anti-Tarnish Coat' }
+    ],
+    brand: 'Andhra Heritage Crafts',
+    originalPrice: 3200,
+    sellingPrice: 2199,
+    discountPercent: 31,
+    stock: 18,
+    inStock: true,
+    rating: 4.9,
+    reviewCount: 78,
+    images: [
+      'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: false,
+    isTrending: false,
+    isAndhraSpecial: true,
+    originDistrict: 'Vijayawada',
+    tags: ['brass', 'urli', 'pooja', 'home decor', 'festival', 'handicrafts'],
+    status: 'active',
+    createdAt: '2025-01-20T11:00:00Z',
+    deliveryDays: 2
+  },
+  {
+    id: 'prod-gongura-pickle-500g',
+    sellerId: 'seller-godavari-heritage',
+    sellerName: 'Godavari Ruchulu & Sweets',
+    categoryId: 'cat-sweets-snacks',
+    subcategoryId: 'sub-pickles',
+    title: 'Andhra Famous Spicy Gongura Pachadi (Sorrel Leaves Pickle) - 500g Glass Jar',
+    titleTe: 'ఆంధ్ర ఫేమస్ గోంగూర నిల్వ పచ్చడి (500 గ్రాములు)',
+    slug: 'andhra-famous-gongura-pachadi-pickle-500g',
+    description: 'The pride of Andhra culinary tradition. Tangy country sorrel leaves slow-cooked in wood-pressed gingelly oil, roasted red chillies, garlic cloves, and toasted spices.',
+    specifications: [
+      { key: 'Weight', value: '500 Grams' },
+      { key: 'Specialty', value: 'No Artificial Vinegar or Preservatives' },
+      { key: 'Spice Level', value: 'Medium High Tangy Spice' },
+      { key: 'Pairing', value: 'Best served with steaming hot rice and pure ghee' }
+    ],
+    brand: 'Godavari Ruchulu',
+    originalPrice: 320,
+    sellingPrice: 249,
+    discountPercent: 22,
+    stock: 110,
+    inStock: true,
+    rating: 4.9,
+    reviewCount: 290,
+    images: [
+      'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800&auto=format&fit=crop&q=80'
+    ],
+    isBestSeller: true,
+    isTrending: false,
+    isAndhraSpecial: true,
+    originDistrict: 'Guntur',
+    tags: ['gongura', 'pickle', 'pachadi', 'andhra meals', 'spicy'],
+    status: 'active',
+    createdAt: '2025-01-19T06:00:00Z',
+    deliveryDays: 1
+  }
+];
+
+export const INITIAL_BANNERS: Banner[] = [
+  {
+    id: 'banner-ugadi-grand-utsav',
+    title: 'Ugadi Grand Mahotsavam Sale',
+    subtitle: 'Up to 60% OFF on Authentic Andhra Handlooms, Pattu Sarees & Sweets',
+    badge: 'GRAND AP FESTIVAL SALE',
+    taglineTe: 'ఉగాది పండుగ ప్రత్యేక ఆఫర్లు - 60% వరకు తగ్గింపు',
+    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=1200&auto=format&fit=crop&q=80',
+    ctaText: 'Shop Festival Deals',
+    ctaLink: '/products?category=cat-ap-special',
+    category: 'cat-ap-special',
+    bgGradient: 'from-amber-700 via-orange-600 to-red-700',
+    active: true
+  },
+  {
+    id: 'banner-atreyapuram-pootharekulu',
+    title: 'Fresh From Godavari Delta',
+    subtitle: 'Direct GI Tagged Atreyapuram Pootharekulu & Fresh Avakaya Pickles',
+    badge: '100% AUTHENTIC GI CERTIFIED',
+    taglineTe: 'గోదావరి రుచులు - నేరుగా మీ ఇంటికి',
+    image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=1200&auto=format&fit=crop&q=80',
+    ctaText: 'Explore Delicacies',
+    ctaLink: '/products?category=cat-sweets-snacks',
+    category: 'cat-sweets-snacks',
+    bgGradient: 'from-emerald-800 via-teal-700 to-cyan-900',
+    active: true
+  },
+  {
+    id: 'banner-5g-tech-revolution',
+    title: 'Fastest 1-Day Delivery in AP',
+    subtitle: 'Next-Gen 5G Smartphones & Audio Gear with Instant Bank Discounts',
+    badge: 'SAME-DAY EXPRESS SHIPPING',
+    taglineTe: 'ఆంధ్రప్రదేశ్ అంతటా వేగవంతమైన డెలివరీ',
+    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1200&auto=format&fit=crop&q=80',
+    ctaText: 'View Electronics',
+    ctaLink: '/products?category=cat-electronics',
+    category: 'cat-electronics',
+    bgGradient: 'from-blue-900 via-indigo-800 to-purple-900',
+    active: true
+  }
+];
+
+export const INITIAL_COUPONS: Coupon[] = [
+  {
+    id: 'coup-andhra50',
+    code: 'ANDHRA50',
+    discountType: 'FLAT',
+    discountValue: 50,
+    minOrderValue: 299,
+    validUntil: '2026-12-31',
+    isActive: true,
+    description: 'Flat ₹50 OFF on orders above ₹299 for all AP residents'
+  },
+  {
+    id: 'coup-ugadi2026',
+    code: 'UGADI2026',
+    discountType: 'PERCENT',
+    discountValue: 15,
+    minOrderValue: 999,
+    maxDiscount: 300,
+    validUntil: '2026-12-31',
+    isActive: true,
+    description: '15% OFF up to ₹300 on Handlooms and Festive Delicacies'
+  },
+  {
+    id: 'coup-firstbuy',
+    code: 'FIRSTBUY',
+    discountType: 'PERCENT',
+    discountValue: 10,
+    minOrderValue: 499,
+    maxDiscount: 150,
+    validUntil: '2026-12-31',
+    isActive: true,
+    description: '10% OFF on your very first order on AndhraMart'
+  },
+  {
+    id: 'coup-godavari100',
+    code: 'GODAVARI100',
+    discountType: 'FLAT',
+    discountValue: 100,
+    minOrderValue: 799,
+    validUntil: '2026-12-31',
+    isActive: true,
+    description: 'Special ₹100 Flat discount on Godavari pickles & sweets'
+  }
+];
+
+export const INITIAL_USERS: User[] = [
+  {
+    id: 'user-customer-demo',
+    name: 'Venkata Sai Kumar',
+    email: 'sai.kumar@example.com',
+    phone: '+91 98480 99999',
+    role: 'customer',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+    isVerified: true,
+    createdAt: '2025-01-01T00:00:00Z'
+  },
+  {
+    id: 'user-seller-1',
+    name: 'Nageswara Rao (Godavari)',
+    email: 'seller@godavari.com',
+    phone: '+91 98480 12345',
+    role: 'seller',
+    avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
+    isVerified: true,
+    sellerId: 'seller-godavari-heritage',
+    createdAt: '2025-01-10T10:00:00Z'
+  },
+  {
+    id: 'user-admin-demo',
+    name: 'AndhraMart Central Admin',
+    email: 'admin@andhramart.in',
+    phone: '+91 89122 00000',
+    role: 'admin',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+    isVerified: true,
+    createdAt: '2025-01-01T00:00:00Z'
+  }
+];
+
+export const INITIAL_ORDERS: Order[] = [
+  {
+    id: 'ord-am-89214',
+    orderNumber: 'AM-2026-89214',
+    userId: 'user-customer-demo',
+    userName: 'Venkata Sai Kumar',
+    userPhone: '+91 98480 99999',
+    shippingAddress: {
+      id: 'addr-default-1',
+      userId: 'user-customer-demo',
+      fullName: 'Venkata Sai Kumar',
+      phone: '+91 98480 99999',
+      pincode: '520001',
+      state: 'Andhra Pradesh',
+      district: 'NTR / Krishna',
+      city: 'Vijayawada',
+      street: 'Flat 402, Godavari Heights, Benz Circle',
+      landmark: 'Near Trendset Mall',
+      addressType: 'HOME',
+      isDefault: true
+    },
+    items: [
+      {
+        productId: 'prod-avakaya-pickle-1kg',
+        productTitle: 'Authentic Andhra Godavari Special Bellam Avakaya Pickle (1 KG Jar)',
+        productImage: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=400&auto=format&fit=crop&q=80',
+        price: 429,
+        quantity: 2,
+        sellerId: 'seller-godavari-heritage',
+        sellerName: 'Godavari Ruchulu & Sweets'
+      },
+      {
+        productId: 'prod-pootharekulu-dryfruit-box',
+        productTitle: 'Atreyapuram Special Pure Ghee & Dry Fruit Pootharekulu (Pack of 15 Rolls)',
+        productImage: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=400&auto=format&fit=crop&q=80',
+        price: 489,
+        quantity: 1,
+        sellerId: 'seller-godavari-heritage',
+        sellerName: 'Godavari Ruchulu & Sweets'
+      }
+    ],
+    subtotal: 1347,
+    discount: 100,
+    deliveryCharge: 0,
+    finalTotal: 1247,
+    couponCode: 'GODAVARI100',
+    paymentMethod: 'UPI',
+    paymentStatus: 'PAID',
+    paymentDetails: {
+      upiId: 'saikumar@okaxis',
+      transactionId: 'TXN-UPI-9848-AM-29384'
+    },
+    orderStatus: 'SHIPPED',
+    trackingNumber: 'AMEXP-VJWD-772910',
+    courierPartner: 'Andhra Express Logistics (AP SpeedHub)',
+    trackingHistory: [
+      {
+        status: 'PLACED',
+        title: 'Order Placed Successfully',
+        location: 'Vijayawada Central Gateway',
+        timestamp: '2026-08-28 10:15 AM',
+        completed: true,
+        notes: 'Payment verified via UPI'
+      },
+      {
+        status: 'CONFIRMED',
+        title: 'Order Confirmed by Godavari Ruchulu',
+        location: 'Rajahmundry Main Store',
+        timestamp: '2026-08-28 11:30 AM',
+        completed: true,
+        notes: 'Items inspected & quality certified'
+      },
+      {
+        status: 'PACKED',
+        title: 'Packed in Tamper-Proof Box',
+        location: 'Rajahmundry Logistics Facility',
+        timestamp: '2026-08-28 03:00 PM',
+        completed: true,
+        notes: 'Assigned to Andhra Express courier'
+      },
+      {
+        status: 'SHIPPED',
+        title: 'In Transit to Vijayawada Delivery Hub',
+        location: 'Eluru - Vijayawada Highway Transit',
+        timestamp: '2026-08-29 06:45 AM',
+        completed: true,
+        notes: 'Expected delivery today by 5:00 PM'
+      },
+      {
+        status: 'OUT_FOR_DELIVERY',
+        title: 'Out for Delivery',
+        location: 'Benz Circle Hub, Vijayawada',
+        timestamp: 'Expected Today',
+        completed: false
+      },
+      {
+        status: 'DELIVERED',
+        title: 'Delivered',
+        location: 'Customer Address',
+        timestamp: 'Pending',
+        completed: false
+      }
+    ],
+    estimatedDelivery: 'Today, by 5:00 PM',
+    createdAt: '2026-08-28T10:15:00Z',
+    updatedAt: '2026-08-29T06:45:00Z'
+  }
+];
+
+export const INITIAL_REVIEWS: Review[] = [
+  {
+    id: 'rev-1',
+    productId: 'prod-avakaya-pickle-1kg',
+    userId: 'user-customer-demo',
+    userName: 'Kalyan Chakravarthy',
+    rating: 5,
+    title: 'Nostalgic Godavari Taste! Perfect spicy tang',
+    comment: 'The sesame oil and jaggery balance in this Bellam Avakaya is extraordinary. Tastes exactly like my grandmother’s recipe in Rajahmundry. Delivered in 1 day to Vijayawada in sturdy glass packaging!',
+    verifiedPurchase: true,
+    helpfulCount: 42,
+    createdAt: '2026-08-20T12:00:00Z',
+    userDistrict: 'Krishna'
+  },
+  {
+    id: 'rev-2',
+    productId: 'prod-pootharekulu-dryfruit-box',
+    userId: 'user-rev-2',
+    userName: 'Sravani Devi',
+    rating: 5,
+    title: 'Paper thin and dripping in pure cow ghee',
+    comment: 'Freshly made in Atreyapuram! The crispy rice layer melts in the mouth instantly with rich cashews and badam. Must try sweet on AndhraMart.',
+    verifiedPurchase: true,
+    helpfulCount: 29,
+    createdAt: '2026-08-22T14:30:00Z',
+    userDistrict: 'Visakhapatnam'
+  },
+  {
+    id: 'rev-3',
+    productId: 'prod-dharmavaram-silk-saree-red',
+    userId: 'user-rev-3',
+    userName: 'Padmavathi Lakshmi',
+    rating: 5,
+    title: 'Magnificent bridal luster and authentic Silk Mark',
+    comment: 'Purchased for family function. The heavy zari pallu and soft feel of authentic Dharmavaram pitloom weave is unmatched. 100% genuine.',
+    verifiedPurchase: true,
+    helpfulCount: 38,
+    createdAt: '2026-08-15T09:00:00Z',
+    userDistrict: 'Tirupati'
+  }
+];
+
+export const INITIAL_NOTIFICATIONS: AppNotification[] = [
+  {
+    id: 'notif-1',
+    userId: 'user-customer-demo',
+    title: 'Order Shipped! 🚚',
+    message: 'Your AndhraMart order AM-2026-89214 has left the Rajahmundry hub and is in transit to Vijayawada.',
+    type: 'ORDER',
+    read: false,
+    createdAt: '2026-08-29T06:45:00Z',
+    link: '/orders'
+  },
+  {
+    id: 'notif-2',
+    userId: 'user-customer-demo',
+    title: 'Ugadi Festival Bonus Coupon 🪔',
+    message: 'Use coupon UGADI2026 to get flat 15% discount on all Handlooms & Sweets today.',
+    type: 'PROMO',
+    read: false,
+    createdAt: '2026-08-28T08:00:00Z',
+    link: '/products'
+  }
+];
